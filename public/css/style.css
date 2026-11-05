@@ -466,3 +466,14 @@ table.data.editing-table td:focus, table.data.editing-table th:focus { outline: 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- Móvil: el desenfoque de fondo (efecto cristal) sobre el 3D en movimiento es muy costoso ---------- */
+@media (pointer: coarse) {
+  .hint, .hud-btn, .panel-top, .content, .site-footer, .modal-backdrop {
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  }
+  .panel-top { background: rgba(15, 10, 6, 0.9); }
+  .content { background: rgba(20, 14, 9, 0.86); }
+  .site-footer { background: rgba(20, 14, 9, 0.92); }
+  .screen-splat canvas { filter: none; }
+}

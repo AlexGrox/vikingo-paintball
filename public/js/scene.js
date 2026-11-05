@@ -26,6 +26,18 @@ const SPLAT_SIZE = 0.5; // tamaño real de la mancha (m): la perspectiva la hace
 const SPLAT_FADE = 3; // segundos que tarda en desvanecerse
 const DEPTH = 9; // distancia del pórtico de carteles
 const HOME_POS = new THREE.Vector3(0, 1.6, 0); // posición de la cámara en la portada
+
+/* Perfil de calidad: en móviles se reduce lo que más cuesta sin cambiar el aspecto general.
+   Además, la resolución se ajusta sola si los fotogramas por segundo bajan (ver frame()). */
+const IS_MOBILE = (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)
+  || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+export const QUALITY = IS_MOBILE
+  ? { mobile: true, pixelRatio: 1.5, minPixelRatio: 0.8, antialias: false, shadowSize: 1024, softShadows: false,
+      shadowEvery: 3, keepTree: (i) => i % 3 !== 2, keepTwig: (k) => k % 2 === 0, twigShadows: false,
+      mist: 26, rays: 20, mistDetail: false, pointLights: false, aniso: 4, stationHalfRate: true, spawnTries: 4 }
+  : { mobile: false, pixelRatio: 2, minPixelRatio: 1, antialias: true, shadowSize: 2048, softShadows: true,
+      shadowEvery: 1, keepTree: () => true, keepTwig: () => true, twigShadows: true,
+      mist: 80, rays: 42, mistDetail: true, pointLights: true, aniso: 16, stationHalfRate: false, spawnTries: 10 };
 // Fondo fotográfico del escenario (public/img/fondo-bosque.jpg, a partir de fondo.png)
 const BACKDROP = {
   url: 'img/fondo-bosque.jpg',
@@ -1115,10 +1127,12 @@ function torch() {
   flame.scale.set(0.95, 1.42, 1);
   flame.position.y = 2.02;
   flame.renderOrder = 3;
-  const light = new THREE.PointLight(0xff9a3c, 3, 9, 1.6);
-  light.position.y = 2.5;
+  // en móvil sin luz puntual (cada una encarece todos los píxeles): la llama ya es luminosa
+  const light = QUALITY.pointLights ? new THREE.PointLight(0xff9a3c, 3, 9, 1.6) : null;
+  if (light) light.position.y = 2.5;
   pole.castShadow = true;
-  g.add(pole, bowl, flame, light);
+  g.add(pole, bowl, flame);
+  if (light) g.add(light);
   const phase = R(0, 10);
   setFireFrame(fireTex, Math.floor(phase * 7) % FIRE.frames);
   g.userData = { fireTex, light, phase };
@@ -1208,10 +1222,12 @@ function buildStations({ scene, woodMat, logMat, solid }) {
     book.rotation.y = 0.3;
     add(g, new THREE.BoxGeometry(0.18, 0.28, 0.18), new THREE.MeshStandardMaterial({ color: 0x2b2b2b, metalness: 0.7, roughness: 0.4 }), 2.85, 1.13, tz);
     add(g, new THREE.BoxGeometry(0.12, 0.18, 0.12), new THREE.MeshBasicMaterial({ color: 0xffc46b }), 2.85, 1.13, tz);
-    const lamp = new THREE.PointLight(0xffb060, 2.2, 7, 1.6);
-    lamp.position.set(2.85, 1.4, tz + 0.3);
-    g.add(lamp);
-    torches.push({ userData: { light: lamp, base: 2.2, phase: 3 } });
+    if (QUALITY.pointLights) {
+      const lamp = new THREE.PointLight(0xffb060, 2.2, 7, 1.6);
+      lamp.position.set(2.85, 1.4, tz + 0.3);
+      g.add(lamp);
+      torches.push({ userData: { light: lamp, base: 2.2, phase: 3 } });
+    }
     // barriles de madera con duelas y aros de hierro
     for (const [bx, bz, ry] of [[-2.7, D / 2 + 1.1, 0.4], [-3.4, D / 2 + 0.6, 1.9]]) {
       const b = createWoodBarrel();
@@ -1380,7 +1396,7 @@ function buildStations({ scene, woodMat, logMat, solid }) {
       for (const a of animated) a.update(t);
       for (const tc of torches) {
         const { light, fireTex, phase, base = 3 } = tc.userData;
-        light.intensity = base + Math.sin(t * 13 + phase) * 0.35 + Math.sin(t * 7.3 + phase) * 0.25;
+        if (light) light.intensity = base + Math.sin(t * 13 + phase) * 0.35 + Math.sin(t * 7.3 + phase) * 0.25;
         if (fireTex) setFireFrame(fireTex, Math.floor(t * FIRE.fps + phase * 7) % FIRE.frames);
       }
     },
@@ -1391,13 +1407,17 @@ function buildStations({ scene, woodMat, logMat, solid }) {
    createScene
    ========================================================================== */
 export async function createScene({ canvas, crosshair, content, onSectionHit, onFirstShot }) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: QUALITY.antialias, powerPreference: 'high-performance' });
+  const maxPixelRatio = Math.min(window.devicePixelRatio || 1, QUALITY.pixelRatio);
+  let pixelRatio = maxPixelRatio;
+  renderer.setPixelRatio(pixelRatio);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = QUALITY.softShadows ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  // en móvil el mapa de sombras se recalcula cada pocos fotogramas (casi todo el escenario es estático)
+  if (QUALITY.shadowEvery > 1) renderer.shadowMap.autoUpdate = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
-  const maxAniso = renderer.capabilities.getMaxAnisotropy();
+  const maxAniso = Math.min(renderer.capabilities.getMaxAnisotropy(), QUALITY.aniso);
 
   const scene = new THREE.Scene();
   // Paleta tomada de fondo.png (pinar al atardecer, a contraluz):
@@ -1443,7 +1463,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     sun.position.copy(sun.target.position).addScaledVector(TO_SUN, 60);
   }
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(QUALITY.shadowSize, QUALITY.shadowSize);
   Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 140 });
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
@@ -1654,6 +1674,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     const twigGeo = new THREE.CylinderGeometry(0.25, 1, 1, 5).translate(0, 0.5, 0);
     const twigMat = new THREE.MeshStandardMaterial({ map: bark.map, roughness: 1, color: 0x8a7a68 });
     const twigData = [];
+    let drawn = 0;
 
     const m = new THREE.Matrix4(), col = new THREE.Color(), q = new THREE.Quaternion();
     const UPY = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3(), sub = new THREE.Vector3(), p = new THREE.Vector3();
@@ -1674,10 +1695,11 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       } while (inClearZone(x, z, 2.5) && ++tries < 20);
       const height = R(34, 48), radius = R(0.32, 0.55);
       const gy = terrainHeight(x, z) - 0.3; // base del tronco algo enterrada (en ladera)
+      const keep = QUALITY.keepTree(i); // en móvil se dibujan ~2 de cada 3 (se calculan todos: el resto del escenario no cambia)
       m.makeScale(radius, height, radius).setPosition(x, gy, z);
-      trunks.setMatrixAt(i, m);
+      if (keep) trunks.setMatrixAt(drawn, m);
       col.setScalar(R(0.75, 1.1));
-      trunks.setColorAt(i, col);
+      if (keep) trunks.setColorAt(drawn++, col);
 
       // ramitas secas: más abundantes en la parte baja y media, como en un pinar
       const nTwigs = Math.floor(R(9, 16));
@@ -1691,11 +1713,12 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
         const len = R(0.6, 2.2) * (1 - t * 0.6);
         const thick = R(0.025, 0.05);
         p.set(x + Math.cos(az) * rr * 0.9, gy + y, z + Math.sin(az) * rr * 0.9);
-        twigData.push({ p: p.clone(), dir: dir.clone(), len, thick });
+        const keepTwig = keep && QUALITY.keepTwig(k);
+        if (keepTwig) twigData.push({ p: p.clone(), dir: dir.clone(), len, thick });
         // pequeña bifurcación a mitad de la rama
         if (rnd() < 0.55) {
           sub.copy(dir).applyAxisAngle(UPY, R(-0.7, 0.7)).add(new THREE.Vector3(0, R(-0.25, 0.35), 0)).normalize();
-          twigData.push({ p: p.clone().addScaledVector(dir, len * R(0.4, 0.65)), dir: sub.clone(), len: len * R(0.35, 0.55), thick: thick * 0.6 });
+          if (keepTwig) twigData.push({ p: p.clone().addScaledVector(dir, len * R(0.4, 0.65)), dir: sub.clone(), len: len * R(0.35, 0.55), thick: thick * 0.6 });
         }
       }
     }
@@ -1705,15 +1728,19 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       m.compose(tw.p, q, new THREE.Vector3(tw.thick, tw.len, tw.thick));
       twigs.setMatrixAt(k, m);
     });
+    trunks.count = drawn;
     trunks.castShadow = trunks.receiveShadow = true;
-    twigs.castShadow = true;
+    twigs.castShadow = QUALITY.twigShadows;
     scene.add(solid(trunks), twigs);
   }
 
   /* ----- bruma en movimiento y rayos de sol, solo entre los árboles ----- */
   // despejado: el campo de juego (misma elipse que el suelo de tierra) y las estaciones
   const isClearArea = (x, z, pad = 0) => Math.hypot(x / 1.3, z + 16) < 27 + pad || inClearZone(x, z, pad);
-  const atmosphere = createAtmosphere({ scene, toSun: TO_SUN, rand: rnd, isClear: isClearArea, groundHeight: terrainHeight });
+  const atmosphere = createAtmosphere({
+    scene, toSun: TO_SUN, rand: rnd, isClear: isClearArea, groundHeight: terrainHeight,
+    mistCount: QUALITY.mist, rayCount: QUALITY.rays, detailed: QUALITY.mistDetail,
+  });
 
   /* ----- un jugador en silueta cruza corriendo entre los árboles (uno cada vez) ----- */
   preloadScreenSplats(RUNNER_PAINT);
@@ -1722,6 +1749,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     camera,
     isClear: isClearArea,
     occluders: solids,
+    spawnTries: QUALITY.spawnTries,
     // solo dispara a la cámara en la portada y con la cámara quieta
     canShoot: () => mode === 'home' && !tween,
     onScreenHit: screenSplat,
@@ -1940,9 +1968,11 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   gunPivot.add(gunRecoil);
   camera.add(gunPivot);
   // luz de relleno para que la marcadora no quede negra
-  const gunLight = new THREE.PointLight(0xfff2e0, 0.6, 2.5);
-  gunLight.position.set(-0.2, 0.25, 0.1);
-  camera.add(gunLight);
+  if (QUALITY.pointLights) {
+    const gunLight = new THREE.PointLight(0xfff2e0, 0.6, 2.5);
+    gunLight.position.set(-0.2, 0.25, 0.1);
+    camera.add(gunLight);
+  }
 
   function positionGun() {
     const d = 0.62;
@@ -2227,6 +2257,27 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
      ========================================================================== */
   const clock = new THREE.Clock();
   let t = 0;
+  let frameNo = 0;
+  const perf = { time: 0, frames: 0, good: 0 };
+  /** Resolución dinámica: baja si los FPS caen y sube despacio cuando sobra margen */
+  function adaptResolution(dt) {
+    perf.time += dt;
+    perf.frames++;
+    if (perf.time < 1.5) return;
+    const fps = perf.frames / perf.time;
+    perf.time = perf.frames = 0;
+    if (fps < 48 && pixelRatio > QUALITY.minPixelRatio) {
+      pixelRatio = Math.max(QUALITY.minPixelRatio, pixelRatio - 0.2);
+      renderer.setPixelRatio(pixelRatio);
+      perf.good = 0;
+    } else if (fps > 57 && pixelRatio < maxPixelRatio) {
+      if (++perf.good >= 3) { // varios periodos seguidos con margen antes de subir
+        pixelRatio = Math.min(maxPixelRatio, pixelRatio + 0.1);
+        renderer.setPixelRatio(pixelRatio);
+        perf.good = 0;
+      }
+    } else perf.good = 0;
+  }
   function frame() {
     if (!running) return;
     requestAnimationFrame(frame);
@@ -2387,6 +2438,12 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       }
     }
 
+    frameNo++;
+    // en una sección (cámara casi quieta) el móvil dibuja a media velocidad: más fluidez al leer y hacer scroll
+    const halfRate = QUALITY.stationHalfRate && mode === 'station' && !tween;
+    if (halfRate && frameNo % 2) return;
+    if (QUALITY.shadowEvery > 1 && frameNo % QUALITY.shadowEvery === 0) renderer.shadowMap.needsUpdate = true;
+    if (!halfRate) adaptResolution(dt);
     renderer.render(scene, camera);
   }
 

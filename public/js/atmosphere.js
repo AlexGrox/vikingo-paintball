@@ -29,7 +29,7 @@ const NOISE_GLSL = /* glsl */ `
  * @param {(x:number,z:number)=>boolean} o.isClear  true si el punto está en el campo o en una estación
  * @param {()=>number} o.rand        aleatorio reproducible 0..1
  */
-export function createAtmosphere({ scene, toSun, isClear, rand, groundHeight = () => 0 }) {
+export function createAtmosphere({ scene, toSun, isClear, rand, groundHeight = () => 0, mistCount = 80, rayCount = 42, detailed = true }) {
   const R = (a, b) => a + (b - a) * rand();
   const uniforms = {
     uTime: { value: 0 },
@@ -95,7 +95,7 @@ export function createAtmosphere({ scene, toSun, isClear, rand, groundHeight = (
         float shape = smoothstep(0.5, 0.08, r);
         float ground = smoothstep(0.0, 0.32, vUv.y);           // sin línea dura contra el suelo
         vec2 q = vUv * vec2(2.6, 1.6) + vec2(vSeed * 13.0 + uTime * 0.035, uTime * 0.012);
-        float n = fbm(q + fbm(q * 1.7 - uTime * 0.02));        // remolinos internos
+        ${detailed ? 'float n = fbm(q + fbm(q * 1.7 - uTime * 0.02));  // remolinos internos' : 'float n = fbm(q + vec2(sin(uTime * 0.05 + vSeed * 6.0), 0.0) * 0.6); // versión ligera'}
         float a = shape * ground * smoothstep(0.22, 0.72, n);
         // dispersión: mirando hacia el sol la bruma brilla dorada
         vec3 V = normalize(vWorld - cameraPosition);
@@ -119,6 +119,7 @@ export function createAtmosphere({ scene, toSun, isClear, rand, groundHeight = (
     m.makeScale(w, h, 1).setPosition(x, groundHeight(x, z) + h * 0.42, z);
     mist.setMatrixAt(i, m);
   }
+  mist.count = Math.min(MIST, mistCount); // se generan todas (misma distribución) y se dibujan las indicadas
   mist.frustumCulled = false; // los vértices se recolocan en el shader
   mist.renderOrder = 1;
   scene.add(mist);
@@ -193,6 +194,7 @@ export function createAtmosphere({ scene, toSun, isClear, rand, groundHeight = (
     m.makeScale(w, len, 1).setPosition(c);
     rays.setMatrixAt(i, m);
   }
+  rays.count = Math.min(RAYS, rayCount);
   rays.frustumCulled = false;
   rays.renderOrder = 2;
   scene.add(rays);

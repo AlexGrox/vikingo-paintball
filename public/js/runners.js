@@ -28,7 +28,7 @@ const UPV = new THREE.Vector3(0, 1, 0);
  * @param {()=>boolean} [o.canShoot]  si puede disparar a la cámara (solo en la portada)
  * @param {(x:number, y:number, color:string)=>void} [o.onScreenHit]  bola que revienta en pantalla (x, y en 0..1)
  */
-export function createRunner({ scene, camera, isClear, groundHeight, occluders, canShoot = () => false, onScreenHit }) {
+export function createRunner({ scene, camera, isClear, groundHeight, occluders, canShoot = () => false, onScreenHit, spawnTries = 10 }) {
   const R = (a, b) => a + (b - a) * Math.random();
 
   const tex = new THREE.Texture();
@@ -118,7 +118,8 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
     r.set(-f.z, 0, f.x); // derecha en pantalla
     const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
     const wantApproach = Math.random() < 0.55;
-    for (let k = 0; k < 40; k++) {
+    // pocos intentos por fotograma (cada uno hace muchas comprobaciones de visibilidad): sin tirones
+    for (let k = 0; k < spawnTries; k++) {
       // punto de paso: dentro del encuadre, en el bosque y visible
       const a = Math.atan(R(-0.95, 0.95) * tanH);
       const d = R(18, 70);
@@ -127,7 +128,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
       if (isClear(P.x, P.z, 2) || !visibleAt(P.x, P.z)) continue;
       const toCam = camera.position.clone().sub(P).setY(0).normalize();
       // si se insiste mucho sin éxito, se acepta el otro tipo de recorrido
-      const approach = k < 25 ? wantApproach : !wantApproach;
+      const approach = Math.random() < 0.7 ? wantApproach : !wantApproach;
       let dir;
       if (approach) {
         // hacia la cámara, desviado 15°-45° a un lado
@@ -219,7 +220,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
       updateBalls(dt);
       if (!run) {
         wait -= dt;
-        if (wait <= 0 && !spawn()) wait = 1; // no hay hueco visible: reintentar en 1 s
+        if (wait <= 0 && !spawn()) wait = 0.12; // sin recorrido válido aún: seguir buscando en los próximos fotogramas
         return;
       }
       run.s += run.speed * dt;
