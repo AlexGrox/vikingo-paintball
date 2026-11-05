@@ -7,7 +7,7 @@ module.exports = {
   version: 1,
   site: {
     name: 'Vikingo Paintball',
-    logo: '/img/logo-vikingo.png',
+    logo: 'img/logo-vikingo.png',
     hint: 'Apunta y dispara a un cartel',
     description: 'Campo de paintball Vikingo Paintball: reservas, modalidades de juego, tienda y ranking.',
     footerHtml:

@@ -3,7 +3,8 @@
    ctx = { editing, changed(), rerender() }
    ========================================================================== */
 import { el, icon, iconBtn, toast, pickFile, formDialog, embedUrl, bindEditable, confirmDialog } from './ui.js';
-import { uploadFile, sendReserva, uid } from './store.js';
+import { store, uploadFile, sendReserva, uid } from './store.js';
+import { mediaUrl } from './media.js';
 
 /* ---------- Quill (editor de texto enriquecido), carga bajo demanda ---------- */
 let quillPromise = null;
@@ -124,7 +125,7 @@ export const BLOCK_TYPES = {
     render(b, ctx) {
       const fig = el('figure.media.w-' + (b.width || 'normal'), { style: { position: 'relative' } });
       if (b.src) {
-        const img = el('img', { src: b.src, alt: b.alt || '', loading: 'lazy' });
+        const img = el('img', { src: mediaUrl(b.src), alt: b.alt || '', loading: 'lazy' });
         fig.append(!ctx.editing && b.link ? el('a', { href: b.link, target: /^https?:/.test(b.link) ? '_blank' : null, rel: 'noopener' }, img) : img);
       } else if (ctx.editing) {
         fig.append(el('div.placeholder', {}, icon('image', 34), 'Sin imagen'));
@@ -170,7 +171,7 @@ export const BLOCK_TYPES = {
           allowfullscreen: true, style: ctx.editing ? { pointerEvents: 'none' } : null,
         })));
       } else if (b.src) {
-        const v = el('video', { src: b.src, controls: !b.autoplay, playsinline: true, preload: 'metadata' });
+        const v = el('video', { src: mediaUrl(b.src), controls: !b.autoplay, playsinline: true, preload: 'metadata' });
         if (b.autoplay) { v.muted = true; v.autoplay = true; v.loop = true; }
         fig.append(v);
       } else if (ctx.editing) {
@@ -209,8 +210,8 @@ export const BLOCK_TYPES = {
     render(b, ctx) {
       const grid = el('div.gallery');
       b.images.forEach((im, i) => {
-        const img = el('img', { src: im.src, alt: im.caption || '', loading: 'lazy' });
-        if (!ctx.editing) img.addEventListener('click', () => openLightbox(im.src));
+        const img = el('img', { src: mediaUrl(im.src), alt: im.caption || '', loading: 'lazy' });
+        if (!ctx.editing) img.addEventListener('click', () => openLightbox(mediaUrl(im.src)));
         const fig = el('figure', {}, img);
         if (ctx.editing) {
           fig.append(el('div.g-tools', {},
@@ -249,7 +250,7 @@ export const BLOCK_TYPES = {
     render(b, ctx) {
       const grid = el('div.cards');
       b.items.forEach((it, i) => {
-        const media = el('div.card-img', {}, it.img ? el('img', { src: it.img, alt: '', loading: 'lazy' }) : el('div.noimg', {}, icon('image', 48)));
+        const media = el('div.card-img', {}, it.img ? el('img', { src: mediaUrl(it.img), alt: '', loading: 'lazy' }) : el('div.noimg', {}, icon('image', 48)));
         if (!it.img && !ctx.editing) media.hidden = true;
         const tag = el('span.card-tag', {}, it.tag || '');
         const title = el('h3', {}, it.title || '');
@@ -414,6 +415,8 @@ export const BLOCK_TYPES = {
       successText: '¡Recibido! Te contactaremos pronto.', modalidades: 'Pack Guerrero, Pack Jarl, Pack Valhalla',
     }),
     render(b, ctx) {
+      // en la web publicada (sin servidor) se reserva por WhatsApp o teléfono
+      if (store.mode === 'static') return contactCard(b, ctx);
       const today = new Date().toISOString().slice(0, 10);
       const opts = (b.modalidades || '').split(',').map((s) => s.trim()).filter(Boolean);
       const f = (label, input, full) => el('label.field' + (full ? '.full' : ''), {}, el('span', {}, label), input);
@@ -474,6 +477,29 @@ export const BLOCK_TYPES = {
     },
   },
 };
+
+/** Tarjeta de reserva por WhatsApp / teléfono (web publicada sin servidor) */
+function contactCard(b, ctx) {
+  const site = store.content.site || {};
+  const digits = (v) => String(v || '').replace(/[^\d+]/g, '');
+  const wa = digits(site.whatsapp).replace(/^\+/, '');
+  const tel = digits(site.phone || site.whatsapp);
+  const title = el('h2', {}, b.title || '');
+  const text = el('p', { style: { margin: '0 0 18px', color: 'var(--muted)', whiteSpace: 'pre-line' } },
+    b.contactText || 'Escríbenos por WhatsApp o llámanos para reservar tu batalla: te confirmamos disponibilidad al momento.');
+  const msg = encodeURIComponent(b.whatsappMessage || 'Hola, quiero hacer una reserva en Vikingo Paintball.');
+  const buttons = el('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '10px' } },
+    wa ? el('a.btn', { href: `https://wa.me/${wa}?text=${msg}`, target: '_blank', rel: 'noopener' }, 'Reservar por WhatsApp') : null,
+    tel ? el('a.btn.secondary', { href: `tel:${tel}` }, `Llamar ${site.phone || site.whatsapp}`) : null
+  );
+  const card = el('div.form-card', {}, title, text, buttons);
+  if (ctx.editing) {
+    bindEditable(title, b, 'title', ctx.changed, { placeholder: 'Título' });
+    bindEditable(text, b, 'contactText', ctx.changed, { multiline: true, placeholder: 'Texto de reserva' });
+    if (!wa && !tel) card.append(el('p.form-msg.err', {}, 'Añade tu WhatsApp o teléfono en «Ajustes del sitio» para que aparezcan los botones.'));
+  }
+  return card;
+}
 
 export function createBlock(type) {
   return { id: uid(), ...BLOCK_TYPES[type].create() };

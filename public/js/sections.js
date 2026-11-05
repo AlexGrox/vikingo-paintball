@@ -2,6 +2,7 @@
 import { el, icon, iconBtn, bindEditable, confirmDialog, formDialog, pickFile, toast } from './ui.js';
 import { store, markDirty, uploadFile, emit } from './store.js';
 import { BLOCK_TYPES, createBlock, richEditor } from './blocks.js';
+import { mediaUrl } from './media.js';
 
 const body = () => document.getElementById('panel-body');
 let currentKey = null;
@@ -38,7 +39,7 @@ export function renderSection(key, { keepScroll = false } = {}) {
   const h1 = el('h1', {}, sec.title || '');
   const sub = el('p.subtitle', {}, sec.subtitle || '');
   const hero = el('header.hero' + (sec.cover ? '.has-cover' : ''), {},
-    sec.cover ? el('div.hero-bg', { style: { backgroundImage: `url("${sec.cover}")` } }) : null,
+    sec.cover ? el('div.hero-bg', { style: { backgroundImage: `url("${mediaUrl(sec.cover)}")` } }) : null,
     h1,
     sub
   );

@@ -6,6 +6,7 @@ import { el, icon, toast } from './ui.js';
 import { renderSection, renderTabs } from './sections.js';
 import { initAdmin, openLogin, renderBar } from './admin.js';
 import { isMuted, setMuted } from './audio.js';
+import { mediaUrl } from './media.js';
 
 const $ = (s) => document.querySelector(s);
 const home = $('#home');
@@ -16,7 +17,7 @@ let scene = null;
 let navToken = 0; // invalida navegaciones anteriores si el usuario cambia de destino a mitad de viaje
 let shownKey = null; // sección cuya página está visible
 
-const DEFAULT_LOGO = '/img/logo-vikingo.png';
+const DEFAULT_LOGO = 'img/logo-vikingo.png';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function applySite() {
@@ -24,11 +25,12 @@ function applySite() {
   hint.textContent = site.hint || '';
   hint.hidden = !site.hint;
   $('meta[name=description]').content = site.description || '';
-  $('#fallback-logo').src = site.logo;
+  const logo = mediaUrl(site.logo);
+  $('#fallback-logo').src = logo;
   $('#fallback-logo').alt = site.name;
   // icono de pestaña: los favicons optimizados del logo oficial, o el logo si se cambia desde la web
-  if (site.logo !== DEFAULT_LOGO) $('link[rel=icon]').href = site.logo;
-  $('#loader img').src = site.logo;
+  if (site.logo !== DEFAULT_LOGO) $('link[rel=icon]').href = logo;
+  if ($('#loader img')) $('#loader img').src = logo;
   $('#fallback-links').replaceChildren(...order.map((k) => el('li', {}, el('a', { href: '#/' + k }, sections[k].label))));
   if (!shownKey) document.title = site.name;
 }
@@ -116,11 +118,12 @@ async function start() {
     console.error(e);
     return;
   }
+  // sesión antes de pintar: en la web publicada el administrador carga la última versión del repositorio
+  await checkSession();
   applySite();
   setupSound();
   panel.tabIndex = -1;
 
-  await checkSession();
   initAdmin({
     onAuth: (on) => {
       if (!on) store.editing = false;

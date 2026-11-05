@@ -13,6 +13,7 @@ import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { DecalGeometry } from 'three/addons/geometries/DecalGeometry.js';
 import { playShot, playSplat, playWood } from './audio.js';
 import { createAtmosphere } from './atmosphere.js';
+import { mediaUrl } from './media.js';
 import { tireAssets, TIRE_HEIGHT, createDrum, DRUM_HEIGHT, createWoodBarrel, cardboardMaterial, thatchMaterial } from './props.js';
 import { createRunner, PAINT as RUNNER_PAINT } from './runners.js';
 import { screenSplat, preloadScreenSplats } from './screen-splats.js';
@@ -26,7 +27,7 @@ const DEPTH = 9; // distancia del pórtico de carteles
 const HOME_POS = new THREE.Vector3(0, 1.6, 0); // posición de la cámara en la portada
 // Fondo fotográfico del escenario (public/img/fondo-bosque.jpg, a partir de fondo.png)
 const BACKDROP = {
-  url: '/img/fondo-bosque.jpg',
+  url: 'img/fondo-bosque.jpg',
   radius: 115, // distancia del panorama
   arc: 150, // grados que abarca, centrado al frente
   eye: 0.47, // altura relativa del horizonte en la foto (0 = arriba)
@@ -621,7 +622,7 @@ function buildHopper() {
    El archivo trae el cañón hacia +X; se normaliza a los ejes de buildMarker:
    cañón hacia +Z, origen sobre el gatillo y eje del cañón a y = 0.032.
    ========================================================================== */
-const MARKER_GLB = '/models/bravoone.glb';
+const MARKER_GLB = 'models/bravoone.glb';
 const MARKER_LENGTH = 0.9; // longitud total deseada (m)
 let markerTemplatePromise = null;
 
@@ -704,7 +705,7 @@ async function buildBadges(bodyMesh) {
   try {
     await Promise.race([document.fonts.load('74px "Germania One"'), new Promise((r) => setTimeout(r, 1500))]);
   } catch { /* sin fuente web */ }
-  const logo = await loadImage('/img/logo-vikingo.png');
+  const logo = await loadImage('img/logo-vikingo.png');
   const mat = (cnv) => new THREE.MeshStandardMaterial({
     map: canvasTex(cnv, 8), transparent: true, metalness: 0.55, roughness: 0.32, envMapIntensity: 1.4,
     polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, depthWrite: false,
@@ -1054,7 +1055,7 @@ function trophy(color) {
 }
 
 /* Fuego animado: hoja de fotogramas con transparencia (generada a partir de un GIF de fuego) */
-const FIRE = { url: '/img/fuego-sheet.webp', cols: 9, rows: 9, frames: 73, fps: 25 };
+const FIRE = { url: 'img/fuego-sheet.webp', cols: 9, rows: 9, frames: 73, fps: 25 };
 let fireImage = null;
 function fireTexture() {
   // cada antorcha tiene su propia textura (comparte la imagen) para ir en un fotograma distinto
@@ -1882,7 +1883,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     });
     if (c.site.logo !== shield.logoSrc) {
       shield.logoSrc = c.site.logo;
-      const img = await loadImage(c.site.logo);
+      const img = await loadImage(mediaUrl(c.site.logo));
       drawShield(shieldCanvas, img);
       shieldTex.needsUpdate = true;
       stations.drawBanner(img);

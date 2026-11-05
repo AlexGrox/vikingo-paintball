@@ -5,6 +5,7 @@ import {
   getReservas, updateReserva, deleteReserva,
 } from './store.js';
 import { loadQuill } from './blocks.js';
+import { mediaUrl } from './media.js';
 
 let hooks = {};
 
@@ -25,9 +26,15 @@ export function initAdmin(h) {
 
 export function openLogin() {
   if (store.isAdmin) return;
-  const input = el('input', { type: 'password', autocomplete: 'current-password', required: true });
+  const isStatic = store.mode === 'static';
+  const input = el('input', { type: 'password', autocomplete: isStatic ? 'off' : 'current-password', required: true, spellcheck: false });
   const err = el('p.form-msg.err', { hidden: true });
-  const form = el('form', {}, el('label.field', {}, el('span', {}, 'Contraseña'), input), err);
+  const form = el('form', {},
+    el('label.field', {}, el('span', {}, isStatic ? 'Clave de GitHub' : 'Contraseña'), input),
+    isStatic
+      ? el('p.help', {}, 'Pega tu clave de GitHub (fine-grained token con permiso «Contents: Read and write» sobre el repositorio de la web). Se guarda solo en este navegador.')
+      : null,
+    err);
   let closeFn;
   const submit = async () => {
     try {
@@ -58,7 +65,7 @@ async function doSave() {
   if (!store.dirty) return toast('No hay cambios que guardar');
   try {
     await saveContent();
-    toast('Cambios guardados ✔');
+    toast(store.mode === 'static' ? 'Guardado ✔ La web publicada se actualizará en 1-2 minutos.' : 'Cambios guardados ✔', 'ok', 4500);
   } catch (e) {
     toast('Error al guardar: ' + e.message, 'err');
   }
@@ -86,7 +93,8 @@ export function renderBar() {
     el('span.ab-title', {}, 'ADMIN'),
     el('label.toggle', {}, el('input', { type: 'checkbox', checked: store.editing, onchange: (e) => setEditing(e.target.checked) }), 'Editar'),
     el('button.btn.small.ghost', { type: 'button', onclick: openSiteSettings }, 'Ajustes del sitio'),
-    el('button.btn.small.ghost', { type: 'button', onclick: openReservas }, 'Reservas'),
+    // reservas y contraseña solo existen con el servidor local
+    store.mode === 'server' ? el('button.btn.small.ghost', { type: 'button', onclick: openReservas }, 'Reservas') : null,
     el('span.ab-sep'),
     status,
     el('button.btn.small.ghost', {
@@ -100,7 +108,7 @@ export function renderBar() {
       },
     }, 'Descartar'),
     el('button.btn.small', { type: 'button', disabled: !store.dirty, onclick: doSave, title: 'Ctrl+S' }, 'Guardar'),
-    el('button.btn.small.ghost', { type: 'button', onclick: openPassword }, 'Contraseña'),
+    store.mode === 'server' ? el('button.btn.small.ghost', { type: 'button', onclick: openPassword }, 'Contraseña') : null,
     el('button.btn.small.ghost', {
       type: 'button',
       onclick: async () => {
@@ -118,7 +126,7 @@ export function renderBar() {
 function openSiteSettings() {
   const c = store.content;
   const draft = structuredClone({ site: c.site, labels: Object.fromEntries(c.order.map((k) => [k, c.sections[k].label])) });
-  const preview = el('img.logo-preview', { src: draft.site.logo, alt: 'Logo' });
+  const preview = el('img.logo-preview', { src: mediaUrl(draft.site.logo), alt: 'Logo' });
   const input = (obj, key, attrs = {}) => {
     const i = el(attrs.textarea ? 'textarea' : 'input', { value: obj[key] || '', ...attrs });
     if (attrs.textarea) i.value = obj[key] || '';
@@ -140,11 +148,11 @@ function openSiteSettings() {
             try {
               toast('Subiendo logo…');
               draft.site.logo = (await uploadFile(f)).url;
-              preview.src = draft.site.logo;
+              preview.src = mediaUrl(draft.site.logo);
             } catch (e) { toast(e.message, 'err'); }
           },
         }, 'Cambiar logo'),
-        el('button.btn.small.ghost', { type: 'button', onclick: () => { draft.site.logo = '/img/logo-vikingo.png'; preview.src = draft.site.logo; } }, 'Logo por defecto'),
+        el('button.btn.small.ghost', { type: 'button', onclick: () => { draft.site.logo = 'img/logo-vikingo.png'; preview.src = draft.site.logo; } }, 'Logo por defecto'),
         el('small.help', {}, 'Se muestra en el escudo 3D y en la cabecera. Mejor PNG con fondo transparente o redondo.')
       )
     ),
@@ -152,6 +160,8 @@ function openSiteSettings() {
       field('Nombre del sitio', input(draft.site, 'name')),
       field('Texto de ayuda en la portada', input(draft.site, 'hint')),
       field('Descripción para Google (SEO)', input(draft.site, 'description', { textarea: true, rows: 2 })),
+      field('WhatsApp para reservas', input(draft.site, 'whatsapp', { type: 'tel', placeholder: '+34 600 000 000' }), false),
+      field('Teléfono', input(draft.site, 'phone', { type: 'tel', placeholder: '+34 600 000 000' }), false),
       ...c.order.map((k) => field(`Cartel «${k}»`, input(draft.labels, k), false))
     ),
     el('p.help', {}, 'El pie de página, los títulos y los bloques se editan directamente en cada sección con «Editar» activado.')

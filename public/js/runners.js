@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { playWhoosh } from './audio.js';
 
-const SHEET = { url: '/img/corredor-sheet.webp', cols: 4, rows: 4, frames: 16, fps: 24 };
+const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 4, frames: 16, fps: 24 };
 const HEIGHT = 1.85; // altura del sprite (m)
 const ASPECT = 0.9854; // alto / ancho de cada fotograma
 const SPEED = [3.8, 4.8]; // m/s (trote táctico)

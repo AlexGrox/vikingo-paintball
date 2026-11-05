@@ -19,7 +19,8 @@ const DATA_DIR = path.join(ROOT, 'data');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const UPLOAD_DIR = path.join(PUBLIC_DIR, 'uploads');
-const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
+// el contenido se publica con la web (GitHub Pages lo sirve tal cual)
+const CONTENT_FILE = path.join(PUBLIC_DIR, 'content.json');
 const RESERVAS_FILE = path.join(DATA_DIR, 'reservas.json');
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 12; // 12 h
@@ -177,7 +178,7 @@ const upload = multer({
 });
 app.post('/api/upload', requireAuth, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Tipo de archivo no permitido' });
-  res.json({ url: '/uploads/' + req.file.filename, type: req.file.mimetype });
+  res.json({ url: 'uploads/' + req.file.filename, type: req.file.mimetype });
 });
 
 /* Reservas */
