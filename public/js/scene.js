@@ -32,7 +32,7 @@ const HOME_POS = new THREE.Vector3(0, 1.6, 0); // posición de la cámara en la 
 const IS_MOBILE = (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)
   || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 export const QUALITY = IS_MOBILE
-  ? { mobile: true, pixelRatio: 1.5, minPixelRatio: 0.8, antialias: false, shadowSize: 1024, softShadows: false,
+  ? { mobile: true, pixelRatio: 1.75, minPixelRatio: 1, antialias: true, shadowSize: 1024, softShadows: false,
       shadowEvery: 3, keepTree: (i) => i % 3 !== 2, keepTwig: (k) => k % 2 === 0, twigShadows: false,
       mist: 26, rays: 20, mistDetail: false, pointLights: false, aniso: 4, stationHalfRate: true, spawnTries: 4 }
   : { mobile: false, pixelRatio: 2, minPixelRatio: 1, antialias: true, shadowSize: 2048, softShadows: true,
@@ -1313,7 +1313,7 @@ function buildStations({ scene, woodMat, logMat, solid }) {
     for (const s of [-1, 1]) add(g, new THREE.CylinderGeometry(0.13, 0.16, 5.6, 10), logMat, s * 2.6, 2.8, -1.6);
     add(g, new THREE.CylinderGeometry(0.1, 0.1, 5.8, 10).rotateZ(Math.PI / 2), logMat, 0, 5.3, -1.6);
     [bannerCanvas] = makeCanvas(512, 640);
-    bannerTex = canvasTex(bannerCanvas);
+    bannerTex = canvasTex(bannerCanvas, 16); // estandarte con el logo: siempre nítido
     const banner = makeCloth(3.4, 4.2, bannerTex, 'hang');
     banner.mesh.position.set(0, 3.15, -1.65);
     g.add(banner.mesh);
@@ -1418,6 +1418,8 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   const maxAniso = Math.min(renderer.capabilities.getMaxAnisotropy(), QUALITY.aniso);
+  // logo, carteles y estandarte: filtrado máximo en todos los dispositivos (es muy barato y mejora mucho el texto)
+  const sharpAniso = renderer.capabilities.getMaxAnisotropy();
 
   const scene = new THREE.Scene();
   // Paleta tomada de fondo.png (pinar al atardecer, a contraluz):
@@ -1813,7 +1815,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     cnv.height = 400;
     const tex = new THREE.CanvasTexture(cnv);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = maxAniso;
+    tex.anisotropy = sharpAniso; // texto del cartel siempre nítido
     const front = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, emissive: 0xffb347, emissiveMap: tex, emissiveIntensity: 0 });
     const mesh = new THREE.Mesh(boardGeo, [woodMat, woodMat, woodMat, woodMat, front, woodMat]);
     const ropeN = 0.18, hN = 1 / BOARD_RATIO;
@@ -1840,7 +1842,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   shieldCanvas.width = shieldCanvas.height = 1024;
   const shieldTex = new THREE.CanvasTexture(shieldCanvas);
   shieldTex.colorSpace = THREE.SRGBColorSpace;
-  shieldTex.anisotropy = maxAniso;
+  shieldTex.anisotropy = sharpAniso; // logo siempre nítido
   {
     // color < blanco atenúa el brillo del escudo (logo); roughness alta = sin reflejos
     const face = new THREE.Mesh(new THREE.CircleGeometry(1, 72), new THREE.MeshStandardMaterial({ map: shieldTex, color: 0xa8a29a, roughness: 0.92, envMapIntensity: 0.6 }));
