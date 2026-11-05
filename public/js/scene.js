@@ -22,6 +22,7 @@ const PAINT_COLORS = ['#ff3b1f', '#ffd60a', '#27e36b', '#1e90ff', '#ff2d92', '#b
 const BALL_SPEED = 38; // m/s (exagerado a escala de juego)
 const MAX_SPLATS = 90;
 const SPLAT_HOLD = 4; // segundos que la mancha se ve nítida
+const SPLAT_SIZE = 0.5; // tamaño real de la mancha (m): la perspectiva la hace pequeña a lo lejos
 const SPLAT_FADE = 3; // segundos que tarda en desvanecerse
 const DEPTH = 9; // distancia del pórtico de carteles
 const HOME_POS = new THREE.Vector3(0, 1.6, 0); // posición de la cámara en la portada
@@ -292,6 +293,32 @@ export function barkTextures() {
     t.anisotropy = 8;
   }
   return { map, normal };
+}
+
+/** Espray de pintura: núcleo denso y miles de gotitas que se dispersan hacia fuera */
+function sprayTexture() {
+  const S = 256, c = S / 2;
+  const [cv, g] = makeCanvas(S, S);
+  const core = g.createRadialGradient(c, c, 0, c, c, S * 0.32);
+  core.addColorStop(0, 'rgba(255,255,255,.95)');
+  core.addColorStop(0.5, 'rgba(255,255,255,.5)');
+  core.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = core;
+  g.fillRect(0, 0, S, S);
+  g.fillStyle = '#fff';
+  for (let i = 0; i < 1400; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const d = Math.pow(Math.random(), 0.7) * S * 0.47; // más densas en el centro
+    const r = Math.max(0.6, (1 - d / (S * 0.47)) * 2.6 * Math.random());
+    g.globalAlpha = 0.35 + Math.random() * 0.65;
+    g.beginPath();
+    g.arc(c + Math.cos(a) * d, c + Math.sin(a) * d, r, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
 function softDotTexture() {
@@ -2041,11 +2068,14 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   const splatTextures = Array.from({ length: 6 }, splatCanvas);
   const dotTex = softDotTexture();
   const ballGeo = new THREE.SphereGeometry(0.045, 14, 10);
-  const dropGeo = new THREE.SphereGeometry(0.022, 6, 5);
+  const dropGeo = new THREE.SphereGeometry(0.014, 6, 5);
+  const shellGeo = new THREE.BoxGeometry(0.03, 0.004, 0.022); // trozo de la cáscara de gelatina
   const balls = [];
   const drops = [];
   const splats = [];
   const puffs = [];
+  const mists = []; // nubes de pintura pulverizada de cada impacto
+  const sprayTex = sprayTexture();
 
   function shoot() {
     const now = performance.now();
@@ -2099,7 +2129,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     }
     if (normal.dot(dir) > 0) normal.negate();
     const dist = camera.position.distanceTo(hit.point);
-    addSplat(hit, normal, ball.color, 0.6 + dist * 0.05);
+    addSplat(hit, normal, ball.color, SPLAT_SIZE * R(0.8, 1.2)); // tamaño real, igual a cualquier distancia
     burst(hit.point, normal, ball.color);
     playSplat(clamp(1.4 - dist / 30, 0.25, 1));
 
@@ -2152,15 +2182,43 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     s.material.dispose();
   }
 
+  /** Explosión de la bola al impactar (todo en tamaño real: de lejos se ve pequeña, de cerca grande) */
   function burst(point, normal, color) {
-    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.3 });
-    for (let i = 0; i < 10; i++) {
+    // 1) nube de pintura pulverizada que se expande y se disipa
+    for (const [size, life, op, flash] of [[R(0.9, 1.25), 0.42, 1, false], [R(0.35, 0.45), 0.1, 1, true]]) {
+      const tint = flash ? color.clone().lerp(new THREE.Color(0xffffff), 0.5) : color; // destello central más claro
+      const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: flash ? dotTex : sprayTex, color: tint, transparent: true, opacity: op, depthWrite: false }));
+      m.material.rotation = R(0, Math.PI * 2);
+      m.position.copy(point).addScaledVector(normal, flash ? 0.1 : 0.16);
+      m.scale.setScalar(0.05);
+      m.renderOrder = 3;
+      scene.add(m);
+      mists.push({ s: m, life: 0, max: life, size, op });
+    }
+    // ejes de la superficie impactada
+    const t1 = new THREE.Vector3().crossVectors(normal, Math.abs(normal.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0)).normalize();
+    const t2 = new THREE.Vector3().crossVectors(normal, t1);
+    // 2) gotas en abanico, casi rasantes a la superficie, que vuelan como estelas
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.25 });
+    for (let i = 0; i < 20; i++) {
+      const a = R(0, Math.PI * 2);
+      const v = t1.clone().multiplyScalar(Math.cos(a)).addScaledVector(t2, Math.sin(a)).multiplyScalar(R(1.8, 5.2))
+        .addScaledVector(normal, R(0.4, 2.4));
       const d = new THREE.Mesh(dropGeo, mat);
-      d.position.copy(point).addScaledVector(normal, 0.03);
-      const v = normal.clone().multiplyScalar(R(1, 2.6)).add(new THREE.Vector3(R(-1.6, 1.6), R(-0.4, 1.8), R(-1.6, 1.6)));
-      d.scale.setScalar(R(0.5, 1.3));
+      d.position.copy(point).addScaledVector(normal, 0.02);
+      d.userData.size = R(0.5, 1.6);
       scene.add(d);
-      drops.push({ d, v, life: 0, max: R(0.35, 0.6), mat });
+      drops.push({ d, v, life: 0, max: R(0.3, 0.6), mat });
+    }
+    // 3) trozos de la cáscara que salen girando
+    const shellMat = new THREE.MeshStandardMaterial({ color: color.clone().lerp(new THREE.Color(0xffffff), 0.2), roughness: 0.4, side: THREE.DoubleSide });
+    for (let i = 0; i < 4; i++) {
+      const d = new THREE.Mesh(shellGeo, shellMat);
+      d.position.copy(point).addScaledVector(normal, 0.03);
+      d.rotation.set(R(0, 6), R(0, 6), R(0, 6));
+      const v = normal.clone().multiplyScalar(R(1.2, 2.6)).addScaledVector(t1, R(-1.5, 1.5)).addScaledVector(t2, R(-1.5, 1.5));
+      scene.add(d);
+      drops.push({ d, v, life: 0, max: R(0.5, 0.8), mat: shellMat, spin: new THREE.Vector3(R(-18, 18), R(-18, 18), R(-18, 18)) });
     }
   }
 
@@ -2265,12 +2323,35 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       const p = drops[i];
       p.life += dt;
       p.v.y -= 9.8 * dt;
+      p.v.multiplyScalar(1 - 1.5 * dt); // rozamiento con el aire
       p.d.position.addScaledVector(p.v, dt);
-      p.d.scale.multiplyScalar(0.96);
+      if (p.spin) {
+        p.d.rotation.x += p.spin.x * dt;
+        p.d.rotation.y += p.spin.y * dt;
+        p.d.rotation.z += p.spin.z * dt;
+      } else {
+        // gota estirada en la dirección de vuelo (estela) que se va consumiendo
+        const k = p.d.userData.size * (1 - p.life / p.max);
+        const stretch = 1 + Math.min(4, p.v.length() * 0.9);
+        p.d.scale.set(k, k, k * stretch);
+        p.d.lookAt(tmpV.copy(p.d.position).add(p.v));
+      }
       if (p.life > p.max || p.d.position.y < 0) {
         scene.remove(p.d);
         drops.splice(i, 1);
         if (!drops.some((o) => o.mat === p.mat)) p.mat.dispose();
+      }
+    }
+    for (let i = mists.length - 1; i >= 0; i--) {
+      const m = mists[i];
+      m.life += dt;
+      const k = Math.min(1, m.life / m.max);
+      m.s.scale.setScalar(0.05 + m.size * (1 - (1 - k) ** 3)); // se expande rápido y frena
+      m.s.material.opacity = m.op * (1 - k ** 1.6); // se mantiene densa y luego se disipa
+      if (k >= 1) {
+        scene.remove(m.s);
+        m.s.material.dispose();
+        mists.splice(i, 1);
       }
     }
     for (let i = puffs.length - 1; i >= 0; i--) {
@@ -2300,7 +2381,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       const tg = s.userData.target;
       if (tg && s.scale.x < tg) {
         const parentScale = s.parent && s.parent !== scene ? s.parent.getWorldScale(tmpV).x : 1;
-        const k = Math.min(tg / parentScale, (s.scale.x * parentScale + dt * 10 * tg) / parentScale);
+        const k = Math.min(tg / parentScale, (s.scale.x * parentScale + dt * 14 * tg) / parentScale); // se extiende de golpe
         s.scale.setScalar(k);
         if (k >= tg / parentScale - 1e-4) s.userData.target = 0;
       }
