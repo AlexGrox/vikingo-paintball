@@ -1,0 +1,120 @@
+/* Contenido inicial. Solo se usa la primera vez (si no existe data/content.json).
+   Todo esto se puede editar después desde la propia web. */
+let n = 0;
+const id = () => 'b' + (++n).toString(36) + Math.random().toString(36).slice(2, 7);
+
+module.exports = {
+  version: 1,
+  site: {
+    name: 'Vikingo Paintball',
+    logo: '/img/logo-vikingo.png',
+    hint: 'Apunta y dispara a un cartel',
+    description: 'Campo de paintball Vikingo Paintball: reservas, modalidades de juego, tienda y ranking.',
+    footerHtml:
+      '<p><strong>Vikingo Paintball</strong> · [Dirección del campo] · <a href="tel:+34000000000">+34 000 000 000</a> · <a href="mailto:info@vikingo-paintball.com">info@vikingo-paintball.com</a></p>',
+  },
+  order: ['reservas', 'juegos', 'tienda', 'ranking'],
+  sections: {
+    reservas: {
+      label: 'RESERVAS',
+      title: 'Reserva tu batalla',
+      subtitle: 'Elige día, hora y tu horda. Nosotros ponemos el campo, el equipo y la pintura.',
+      cover: '',
+      blocks: [
+        {
+          id: id(),
+          type: 'text',
+          html:
+            '<h2>¿Cómo funciona?</h2><ol><li>Rellena el formulario con la fecha y el número de jugadores.</li><li>Te confirmamos disponibilidad por teléfono o email.</li><li>¡Llega 30 minutos antes para equiparte y recibir la charla de seguridad!</li></ol><p>Edad mínima: 12 años (menores con autorización). Grupos a partir de 8 jugadores.</p>',
+        },
+        {
+          id: id(),
+          type: 'cards',
+          items: [
+            { img: '', title: 'Pack Guerrero', tag: '25 €/jugador', text: 'Marcadora, máscara, peto y 200 bolas. 2 horas de juego.', link: '', linkText: '' },
+            { img: '', title: 'Pack Jarl', tag: '35 €/jugador', text: 'Equipo completo, 500 bolas y bebida. 3 horas de juego.', link: '', linkText: '' },
+            { img: '', title: 'Pack Valhalla', tag: '45 €/jugador', text: 'Para despedidas y cumpleaños: 800 bolas, escenarios exclusivos y fotos.', link: '', linkText: '' },
+          ],
+        },
+        {
+          id: id(),
+          type: 'form',
+          title: 'Solicitar reserva',
+          submitText: 'Enviar solicitud',
+          successText: '¡Recibido, guerrero! Te contactaremos pronto para confirmar tu reserva.',
+          modalidades: 'Pack Guerrero, Pack Jarl, Pack Valhalla, Otro / no lo sé',
+        },
+      ],
+    },
+    juegos: {
+      label: 'JUEGOS',
+      title: 'Modos de juego',
+      subtitle: 'Escenarios y misiones para todos los niveles. ¡Que hablen las bolas!',
+      cover: '',
+      blocks: [
+        {
+          id: id(),
+          type: 'cards',
+          items: [
+            { img: '', title: 'Captura la bandera', tag: 'Clásico', text: 'Dos equipos, dos bases y una bandera. Gana quien la lleve a su campamento.', link: '', linkText: '' },
+            { img: '', title: 'Asalto al fuerte', tag: 'Táctico', text: 'Un equipo defiende el fuerte vikingo y el otro intenta tomarlo antes de que acabe el tiempo.', link: '', linkText: '' },
+            { img: '', title: 'Rey de la colina', tag: 'Intenso', text: 'Controla la zona central el mayor tiempo posible. Sin descanso.', link: '', linkText: '' },
+            { img: '', title: 'Escolta al Jarl', tag: 'Misión', text: 'Protege a tu líder hasta el punto de extracción. Si cae, cae la horda.', link: '', linkText: '' },
+          ],
+        },
+        {
+          id: id(),
+          type: 'text',
+          html: '<h2>Normas básicas</h2><ul><li>La máscara no se quita nunca dentro del campo.</li><li>Impacto que rompe y mancha = eliminado.</li><li>Distancia mínima de disparo: 5 metros.</li><li>Respeta al árbitro y a los demás jugadores.</li></ul>',
+        },
+      ],
+    },
+    tienda: {
+      label: 'TIENDA',
+      title: 'Tienda',
+      subtitle: 'Bolas, equipamiento y merchandising de la horda.',
+      cover: '',
+      blocks: [
+        {
+          id: id(),
+          type: 'cards',
+          items: [
+            { img: '', title: 'Caja de 2000 bolas', tag: '45 €', text: 'Bolas de calibre .68 de alta calidad, aptas para todo tipo de marcadoras.', link: '', linkText: 'Consultar' },
+            { img: '', title: 'Máscara térmica', tag: '39 €', text: 'Visor antivaho de doble lente. Imprescindible en invierno.', link: '', linkText: 'Consultar' },
+            { img: '', title: 'Camiseta Vikingo', tag: '18 €', text: 'Camiseta oficial del campo. Tallas S a XXL.', link: '', linkText: 'Consultar' },
+          ],
+        },
+        {
+          id: id(),
+          type: 'text',
+          html: '<p>Los productos se recogen en el campo. Pregúntanos por disponibilidad antes de tu partida.</p>',
+        },
+      ],
+    },
+    ranking: {
+      label: 'RANKING',
+      title: 'Ranking de la horda',
+      subtitle: 'Los guerreros más temidos del campo. ¿Serás el próximo Jarl?',
+      cover: '',
+      blocks: [
+        {
+          id: id(),
+          type: 'table',
+          headers: ['#', 'Jugador', 'Equipo', 'Partidas', 'Eliminaciones', 'Puntos'],
+          rows: [
+            ['1', 'Ragnar', 'Lobos de Odín', '24', '187', '2450'],
+            ['2', 'Lagertha', 'Escudos Rojos', '22', '171', '2310'],
+            ['3', 'Bjorn', 'Lobos de Odín', '19', '150', '1980'],
+            ['4', 'Freydis', 'Cuervos', '17', '129', '1720'],
+            ['5', 'Ivar', 'Escudos Rojos', '15', '101', '1395'],
+          ],
+        },
+        {
+          id: id(),
+          type: 'text',
+          html: '<p><em>El ranking se actualiza después de cada jornada.</em></p>',
+        },
+      ],
+    },
+  },
+};

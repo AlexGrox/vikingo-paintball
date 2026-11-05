@@ -1,0 +1,20 @@
+node_modules/
+data/auth.json
+data/reservas.json
+data/backups/
+*.tmp
+
+# Material de trabajo en la raíz (la web usa las versiones optimizadas de public/)
+/14870-Tippmann-Bravo-One-Elite-2.png
+/marcadora.jpg
+/bravoone.glb
+/logoepico4.png
+/fondo.png
+/bosque-1.jpg
+/bosque-1.gif
+/fuego-transparente.webp
+/soldado-corriendo.gif
+
+# Archivos subidos desde la web
+public/uploads/*
+!public/uploads/.gitkeep

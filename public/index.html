@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Vikingo Paintball</title>
+  <meta name="description" content="Campo de paintball Vikingo Paintball: reservas, modalidades de juego, tienda y ranking." />
+  <meta name="theme-color" content="#1a120b" />
+  <link rel="icon" href="/img/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/img/favicon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,600;0,700;1,400&family=Germania+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- ======= PORTADA 3D ======= -->
+  <main id="home" aria-label="Campo de tiro">
+    <canvas id="scene" aria-hidden="true"></canvas>
+
+    <div id="crosshair" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="64" height="64">
+        <circle cx="32" cy="32" r="17" fill="none" stroke="currentColor" stroke-width="2.5" />
+        <path d="M32 4v14M32 46v14M4 32h14M46 32h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        <circle cx="32" cy="32" r="2.6" fill="currentColor" />
+      </svg>
+    </div>
+
+    <div id="hud">
+      <p id="hint" class="hint" data-edit="site.hint"></p>
+      <div class="hud-tools">
+        <button id="btn-sound" class="hud-btn" type="button" aria-label="Activar o silenciar sonido" title="Sonido"></button>
+      </div>
+    </div>
+
+    <div id="loader" role="status">
+      <img src="/img/logo-vikingo.png" alt="" width="120" height="120" />
+      <span>Preparando el campo…</span>
+    </div>
+
+    <!-- Navegación accesible / alternativa sin WebGL -->
+    <nav id="fallback-nav" aria-label="Secciones">
+      <img id="fallback-logo" src="/img/logo-vikingo.png" alt="Vikingo Paintball" width="180" height="180" />
+      <ul id="fallback-links"></ul>
+    </nav>
+  </main>
+
+  <!-- ======= SECCIÓN (fondo transparente sobre la escena 3D) ======= -->
+  <section id="panel" hidden aria-live="polite">
+    <header class="panel-top">
+      <a href="#/" class="panel-brand" id="panel-brand" aria-label="Volver al campo">
+        <img id="panel-logo" src="/img/logo-vikingo.png" alt="" width="44" height="44" />
+        <span id="panel-sitename">Vikingo Paintball</span>
+      </a>
+      <nav class="panel-tabs" id="panel-tabs" aria-label="Secciones"></nav>
+      <a href="#/" class="panel-close" aria-label="Volver al campo">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <span>Volver al campo</span>
+      </a>
+    </header>
+    <div id="panel-body"></div>
+  </section>
+
+  <!-- ======= ADMIN ======= -->
+  <button id="admin-access" type="button" aria-label="Acceso de administración" title="Administración">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+  </button>
+  <div id="admin-bar" hidden></div>
+  <div id="modal-root"></div>
+  <div id="toasts" aria-live="polite"></div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
