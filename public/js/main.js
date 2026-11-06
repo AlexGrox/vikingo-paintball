@@ -55,7 +55,7 @@ function dismissWelcome() {
   if (welcomeGone) return;
   welcomeGone = true;
   welcome.classList.add('gone');
-  setTimeout(() => (welcome.style.display = 'none'), 700);
+  setTimeout(() => (welcome.style.display = 'none'), 2800); // tras el fundido lento (2,6 s en el CSS)
 }
 
 /* ---------- Enrutado ---------- */

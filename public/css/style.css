@@ -116,8 +116,8 @@ button { font: inherit; color: inherit; }
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
   pointer-events: none; /* el clic atraviesa el recuadro y dispara */
-  transition: opacity .6s, transform .6s;
-  animation: welcome-in .8s .4s both cubic-bezier(.2, .8, .2, 1);
+  transition: opacity 2.6s ease-in-out, transform 2.6s ease-in-out; /* desvanecimiento lento tras el primer disparo */
+  animation: welcome-in .8s .4s backwards cubic-bezier(.2, .8, .2, 1); /* sin efecto al terminar: deja actuar al fundido */
 }
 .welcome a { pointer-events: auto; font-weight: 700; color: var(--accent); }
 .welcome h1 {
@@ -126,7 +126,7 @@ button { font: inherit; color: inherit; }
 }
 .welcome p { margin: 0 0 .7em; font-size: clamp(14px, 1.05vw, 16px); line-height: 1.5; color: #f1e4c5; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
 .welcome p:last-child { margin-bottom: 0; }
-.welcome.gone { opacity: 0; transform: translateY(12px); }
+.welcome.gone { opacity: 0; transform: translateY(14px); }
 @keyframes welcome-in { from { opacity: 0; transform: translateY(16px); } }
 body.in-section .welcome, #home.no-webgl .welcome { display: none; }
 @media (max-width: 760px), (max-aspect-ratio: 4/5) {
