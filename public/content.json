@@ -86,7 +86,7 @@
           "type": "cards",
           "items": [
             {
-              "img": "uploads/1793921380469-41h256-bosque-1.gif",
+              "img": "uploads/1793980851494-wd12rh-juego-de-banderas.png",
               "title": "Captura la bandera",
               "tag": "Clásico",
               "text": "Dos equipos, dos bases y una bandera. Gana quien la lleve a su campamento.",
@@ -94,7 +94,7 @@
               "linkText": ""
             },
             {
-              "img": "",
+              "img": "uploads/1793980959506-e1rcfp-fuerte-3.jpg",
               "title": "Asalto al fuerte",
               "tag": "Táctico",
               "text": "Un equipo defiende el fuerte vikingo y el otro intenta tomarlo antes de que acabe el tiempo.",
@@ -102,18 +102,10 @@
               "linkText": ""
             },
             {
-              "img": "",
-              "title": "Rey de la colina",
+              "img": "uploads/1793981309376-84ai23-gemini-generated-image-ch3wd3ch3wd3ch3w.jfif",
+              "title": "Neutralizar al líder narco",
               "tag": "Intenso",
-              "text": "Controla la zona central el mayor tiempo posible. Sin descanso.",
-              "link": "",
-              "linkText": ""
-            },
-            {
-              "img": "",
-              "title": "Escolta al Jarl",
-              "tag": "Misión",
-              "text": "Protege a tu líder hasta el punto de extracción. Si cae, cae la horda.",
+              "text": "Un grupo comando inspecciona la zona en búsqueda del líder narco, una vez encontrado deberá enfrentarse a sus defensas para lograr neutralizarlo.",
               "link": "",
               "linkText": ""
             }
@@ -237,5 +229,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-06T14:57:57.314Z"
+  "updatedAt": "2026-11-06T16:09:01.372Z"
 }
