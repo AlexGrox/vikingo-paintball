@@ -9,7 +9,9 @@
     "whatsapp": "3517630322",
     "welcomeTitle": "Bienvenido a VIKINGO PAINTBALL CÓRDOBA",
     "welcomeText": "Ven a divertirte con tus amigos y familiares. Guerra con marcadoras de pintura, siente toda la adrenalina en un escenario de juego que simula el combate real. Basta de jugar virtualmente a la guerra, ven a sentirla en tu propio cuerpo.\n\n¿Qué estás esperando? Contáctanos ingresando a RESERVAS y juega al paintball en Córdoba Capital.",
-    "seoTitle": "Vikingo Paintball Córdoba | Paintball en Córdoba Capital"
+    "seoTitle": "Vikingo Paintball Córdoba | Paintball en Córdoba Capital",
+    "instagram": "https://www.instagram.com/vikingo.paintball/",
+    "mapsUrl": "https://maps.app.goo.gl/Las4zxtYZMLsCpjS6"
   },
   "order": [
     "reservas",
@@ -231,5 +233,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-05T23:30:06.610Z"
+  "updatedAt": "2026-11-06T14:57:57.314Z"
 }
