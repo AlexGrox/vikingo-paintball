@@ -5,14 +5,17 @@
     "logo": "img/logo-vikingo.png",
     "hint": "Apunta y dispara a un cartel",
     "description": "Vikingo Paintball Córdoba: guerra con marcadoras de pintura para amigos y familia en un escenario que simula el combate real. Reservá tu partida de paintball en Córdoba Capital.",
-    "footerHtml": "<p><strong>Vikingo Paintball</strong> · [Dirección del campo] · <a href=\"tel:+34000000000\">+34 000 000 000</a> · <a href=\"mailto:info@vikingo-paintball.com\">info@vikingo-paintball.com</a></p>",
-    "whatsapp": "3517630322",
+    "footerHtml": "<p><strong>Vikingo Paintball Córdoba</strong> · Abdel Taier s/n, barrio Virgen de Fátima, Córdoba Capital · <a href=\"https://maps.app.goo.gl/e3DC4fA4AXKiG8TM6\" target=\"_blank\" rel=\"noopener\">Cómo llegar</a></p><p><a href=\"https://wa.me/5493517630322\" target=\"_blank\" rel=\"noopener\">WhatsApp 351 763-0322</a> · <a href=\"tel:+5493517630322\">Llamar</a> · <a href=\"mailto:alejandro@vikingo-paintball.com\">alejandro@vikingo-paintball.com</a></p>",
+    "whatsapp": "+54 9 351 763-0322",
     "welcomeTitle": "Bienvenido a VIKINGO PAINTBALL CÓRDOBA",
     "welcomeText": "Ven a divertirte con tus amigos y familiares. Guerra con marcadoras de pintura, siente toda la adrenalina en un escenario de juego que simula el combate real. Basta de jugar virtualmente a la guerra, ven a sentirla en tu propio cuerpo.\n\n¿Qué estás esperando? Contáctanos ingresando a RESERVAS y juega al paintball en Córdoba Capital.",
     "seoTitle": "Vikingo Paintball Córdoba | Paintball en Córdoba Capital",
     "instagram": "https://www.instagram.com/vikingo.paintball/",
     "mapsUrl": "https://maps.app.goo.gl/Las4zxtYZMLsCpjS6",
-    "mapsQuery": "-31.4857075,-64.2019112"
+    "mapsQuery": "-31.4857075,-64.2019112",
+    "phone": "+54 9 351 763-0322",
+    "email": "alejandro@vikingo-paintball.com",
+    "address": "Abdel Taier s/n, barrio Virgen de Fátima, Córdoba Capital"
   },
   "order": [
     "reservas",
