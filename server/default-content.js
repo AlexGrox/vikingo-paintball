@@ -9,6 +9,9 @@ module.exports = {
     name: 'Vikingo Paintball',
     logo: 'img/logo-vikingo.png',
     hint: 'Apunta y dispara a un cartel',
+    seoTitle: "Vikingo Paintball Córdoba | Paintball en Córdoba Capital",
+    welcomeTitle: "Bienvenido a VIKINGO PAINTBALL CÓRDOBA",
+    welcomeText: "Ven a divertirte con tus amigos y familiares. Guerra con marcadoras de pintura, siente toda la adrenalina en un escenario de juego que simula el combate real. Basta de jugar virtualmente a la guerra, ven a sentirla en tu propio cuerpo.\n\n¿Qué estás esperando? Contáctanos ingresando a RESERVAS y juega al paintball en Córdoba Capital.",
     description: 'Campo de paintball Vikingo Paintball: reservas, modalidades de juego, tienda y ranking.',
     footerHtml:
       '<p><strong>Vikingo Paintball</strong> · [Dirección del campo] · <a href="tel:+34000000000">+34 000 000 000</a> · <a href="mailto:info@vikingo-paintball.com">info@vikingo-paintball.com</a></p>',

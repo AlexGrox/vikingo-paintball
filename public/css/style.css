@@ -108,6 +108,33 @@ button { font: inherit; color: inherit; }
 }
 #fallback-links a:hover, #fallback-links a:focus-visible { color: var(--accent); }
 
+/* ---------------- Bienvenida (portada) ---------------- */
+.welcome {
+  position: fixed; z-index: 4; left: clamp(16px, 9vw, 180px); top: 47%;
+  width: min(440px, 34vw); padding: 22px 24px 18px;
+  background: rgba(15, 10, 6, 0.58); border: 1px solid var(--line); border-radius: 16px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+  pointer-events: none; /* el clic atraviesa el recuadro y dispara */
+  transition: opacity .6s, transform .6s;
+  animation: welcome-in .8s .4s both cubic-bezier(.2, .8, .2, 1);
+}
+.welcome a { pointer-events: auto; font-weight: 700; color: var(--accent); }
+.welcome h1 {
+  font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 2.2vw, 34px); line-height: 1.08;
+  margin: 0 0 10px; color: #fff6df; text-shadow: 0 2px 10px rgba(0, 0, 0, .6);
+}
+.welcome p { margin: 0 0 .7em; font-size: clamp(14px, 1.05vw, 16px); line-height: 1.5; color: #f1e4c5; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+.welcome p:last-child { margin-bottom: 0; }
+.welcome.gone { opacity: 0; transform: translateY(12px); }
+@keyframes welcome-in { from { opacity: 0; transform: translateY(16px); } }
+body.in-section .welcome, #home.no-webgl .welcome { display: none; }
+@media (max-width: 760px), (max-aspect-ratio: 4/5) {
+  .welcome { left: 16px; right: 16px; width: auto; top: auto; bottom: calc(max(22px, env(safe-area-inset-bottom)) + 52px); padding: 16px 18px 14px; }
+  .welcome h1 { font-size: 23px; }
+  .welcome p { font-size: 14px; }
+}
+
 /* ---------------- Bolas que revientan en la pantalla ---------------- */
 #screen-splats { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .screen-splat { position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); }
@@ -469,11 +496,12 @@ table.data.editing-table td:focus, table.data.editing-table th:focus { outline: 
 
 /* ---------- Móvil: el desenfoque de fondo (efecto cristal) sobre el 3D en movimiento es muy costoso ---------- */
 @media (pointer: coarse) {
-  .hint, .hud-btn, .panel-top, .content, .site-footer, .modal-backdrop {
+  .hint, .hud-btn, .panel-top, .content, .site-footer, .modal-backdrop, .welcome {
     backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
   }
   .panel-top { background: rgba(15, 10, 6, 0.9); }
   .content { background: rgba(20, 14, 9, 0.86); }
   .site-footer { background: rgba(20, 14, 9, 0.92); }
   .screen-splat canvas { filter: none; }
+  .welcome { background: rgba(15, 10, 6, 0.72); }
 }

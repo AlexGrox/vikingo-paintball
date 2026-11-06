@@ -12,6 +12,7 @@ const $ = (s) => document.querySelector(s);
 const home = $('#home');
 const panel = $('#panel');
 const hint = $('#hint');
+const welcome = $('#welcome');
 const loader = $('#loader');
 let scene = null;
 let navToken = 0; // invalida navegaciones anteriores si el usuario cambia de destino a mitad de viaje
@@ -32,7 +33,29 @@ function applySite() {
   if (site.logo !== DEFAULT_LOGO) $('link[rel=icon]').href = logo;
   if ($('#loader img')) $('#loader img').src = logo;
   $('#fallback-links').replaceChildren(...order.map((k) => el('li', {}, el('a', { href: '#/' + k }, sections[k].label))));
-  if (!shownKey) document.title = site.name;
+  if (!shownKey) document.title = site.seoTitle || site.name;
+  renderWelcome(site);
+}
+
+/** Recuadro de bienvenida (texto para buscadores). «RESERVAS» enlaza a la sección. */
+function renderWelcome(site) {
+  if (site.welcomeTitle) $('#welcome-title').textContent = site.welcomeTitle;
+  if (site.welcomeText != null) {
+    const paras = String(site.welcomeText).split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
+    $('#welcome-text').replaceChildren(...paras.map((t) => {
+      const p = el('p');
+      t.split(/(RESERVAS)/).forEach((part) => p.append(part === 'RESERVAS' ? el('a', { href: '#/reservas' }, part) : part));
+      return p;
+    }));
+  }
+  welcome.hidden = !site.welcomeTitle && !site.welcomeText && site.welcomeText != null;
+}
+let welcomeGone = false;
+function dismissWelcome() {
+  if (welcomeGone) return;
+  welcomeGone = true;
+  welcome.classList.add('gone');
+  setTimeout(() => (welcome.style.display = 'none'), 700);
 }
 
 /* ---------- Enrutado ---------- */
@@ -69,6 +92,7 @@ function showPanel(key) {
 }
 
 async function goToSection(key) {
+  dismissWelcome();
   if (shownKey === key && !panel.hidden) return;
   const my = ++navToken;
   document.body.classList.add('in-section');
@@ -87,7 +111,7 @@ async function goHome() {
   const my = ++navToken;
   const wasInSection = document.body.classList.contains('in-section');
   shownKey = null;
-  document.title = store.content.site.name;
+  document.title = store.content.site.seoTitle || store.content.site.name;
   await hidePanel();
   if (my !== navToken) return;
   if (scene && wasInSection) {
@@ -166,7 +190,10 @@ async function start() {
           if (location.hash === '#/' + key) route();
           else location.hash = '#/' + key;
         },
-        onFirstShot: () => setTimeout(() => hint.classList.add('gone'), 400),
+        onFirstShot: () => {
+          dismissWelcome();
+          setTimeout(() => hint.classList.add('gone'), 400);
+        },
       })
     );
     home.classList.add('has-scene');

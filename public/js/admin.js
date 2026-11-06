@@ -159,7 +159,11 @@ function openSiteSettings() {
     el('div.form-grid', {},
       field('Nombre del sitio', input(draft.site, 'name')),
       field('Texto de ayuda en la portada', input(draft.site, 'hint')),
+      field('Título para Google (pestaña del navegador)', input(draft.site, 'seoTitle')),
       field('Descripción para Google (SEO)', input(draft.site, 'description', { textarea: true, rows: 2 })),
+      field('Bienvenida: título', input(draft.site, 'welcomeTitle')),
+      field('Bienvenida: texto', input(draft.site, 'welcomeText', { textarea: true, rows: 5 }), true,
+        'Deja una línea en blanco entre párrafos. La palabra RESERVAS se convierte en enlace. Se oculta tras el primer disparo.'),
       field('WhatsApp para reservas', input(draft.site, 'whatsapp', { type: 'tel', placeholder: '+34 600 000 000' }), false),
       field('Teléfono', input(draft.site, 'phone', { type: 'tel', placeholder: '+34 600 000 000' }), false),
       ...c.order.map((k) => field(`Cartel «${k}»`, input(draft.labels, k), false))
