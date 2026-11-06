@@ -58,16 +58,22 @@ export function openLinkWidget(kind) {
 }
 
 function openMap(site) {
-  const q = String(site.mapsQuery || '').trim();
   const link = String(site.mapsUrl || '').trim();
+  let q = String(site.mapsQuery || '').trim();
+  // sin ubicación escrita: sacar las coordenadas de un enlace largo de Google Maps
+  if (!q) {
+    const m = link.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) || link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (m) q = `${m[1]},${m[2]}`;
+  }
+  const isCoords = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(q);
   const body = el('div.widget');
   if (q) {
     body.append(
       el('div.widget-map', {}, el('iframe', {
-        src: `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed`,
+        src: `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed`,
         title: 'Mapa de Vikingo Paintball', loading: 'lazy', referrerpolicy: 'no-referrer-when-downgrade', allowfullscreen: true,
       })),
-      el('p.widget-sub', { style: { margin: '10px 0 0' } }, q)
+      el('p.widget-sub', { style: { margin: '10px 0 0' } }, isCoords ? `${site.name || 'Vikingo Paintball'} · Córdoba` : q)
     );
   } else if (!link) {
     body.append(notConfigured('la ubicación del campo'));
