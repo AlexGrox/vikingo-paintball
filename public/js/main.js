@@ -7,6 +7,7 @@ import { renderSection, renderTabs } from './sections.js';
 import { initAdmin, openLogin, renderBar } from './admin.js';
 import { isMuted, setMuted } from './audio.js';
 import { mediaUrl } from './media.js';
+import { openLinkWidget } from './widgets.js';
 
 const $ = (s) => document.querySelector(s);
 const home = $('#home');
@@ -190,6 +191,7 @@ async function start() {
           if (location.hash === '#/' + key) route();
           else location.hash = '#/' + key;
         },
+        onLinkHit: (kind) => openLinkWidget(kind),
         onFirstShot: () => {
           dismissWelcome();
           setTimeout(() => hint.classList.add('gone'), 400);

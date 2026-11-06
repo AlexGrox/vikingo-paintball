@@ -166,6 +166,13 @@ function openSiteSettings() {
         'Deja una línea en blanco entre párrafos. La palabra RESERVAS se convierte en enlace. Se oculta tras el primer disparo.'),
       field('WhatsApp para reservas', input(draft.site, 'whatsapp', { type: 'tel', placeholder: '+34 600 000 000' }), false),
       field('Teléfono', input(draft.site, 'phone', { type: 'tel', placeholder: '+34 600 000 000' }), false),
+      field('Instagram', input(draft.site, 'instagram', { placeholder: '@vikingopaintball o enlace' }), false),
+      field('Facebook (opcional)', input(draft.site, 'facebook', { placeholder: 'Nombre de la página o enlace' }), false),
+      field('TikTok (opcional)', input(draft.site, 'tiktok', { placeholder: '@usuario' }), false),
+      field('Ubicación del campo', input(draft.site, 'mapsQuery', { placeholder: 'Dirección o coordenadas, p. ej. -31.4201, -64.1888' }), true,
+        'Se muestra en el mapa al disparar al pin de ubicación. Truco: en Google Maps, clic derecho sobre el campo → copiar las coordenadas.'),
+      field('Enlace de Google Maps (opcional)', input(draft.site, 'mapsUrl', { type: 'url', placeholder: 'https://maps.app.goo.gl/…' }), true,
+        'Si lo pegas, el botón «Abrir en Google Maps» abrirá exactamente la ficha de tu campo.'),
       ...c.order.map((k) => field(`Cartel «${k}»`, input(draft.labels, k), false))
     ),
     el('p.help', {}, 'El pie de página, los títulos y los bloques se editan directamente en cada sección con «Editar» activado.')

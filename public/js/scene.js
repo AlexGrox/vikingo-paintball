@@ -16,6 +16,7 @@ import { createAtmosphere } from './atmosphere.js';
 import { mediaUrl } from './media.js';
 import { tireAssets, TIRE_HEIGHT, createDrum, DRUM_HEIGHT, createWoodBarrel, cardboardMaterial, thatchMaterial } from './props.js';
 import { createRunner, PAINT as RUNNER_PAINT } from './runners.js';
+import { createLinks3D } from './links3d.js';
 import { screenSplat, preloadScreenSplats } from './screen-splats.js';
 
 const PAINT_COLORS = ['#ff3b1f', '#ffd60a', '#27e36b', '#1e90ff', '#ff2d92', '#b45cff', '#ff8a00', '#00e5ff'];
@@ -1406,7 +1407,7 @@ function buildStations({ scene, woodMat, logMat, solid }) {
 /* ==========================================================================
    createScene
    ========================================================================== */
-export async function createScene({ canvas, crosshair, content, onSectionHit, onFirstShot }) {
+export async function createScene({ canvas, crosshair, content, onSectionHit, onFirstShot, onLinkHit }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: QUALITY.antialias, powerPreference: 'high-performance' });
   const maxPixelRatio = Math.min(window.devicePixelRatio || 1, QUALITY.pixelRatio);
   let pixelRatio = maxPixelRatio;
@@ -1759,6 +1760,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   });
 
   /* ----- caja de palés en primer plano (como en la foto) ----- */
+  let crateGroup = null, crateFrontZ = 0;
   {
     const crate = new THREE.Group();
     const W = 1.6, H = 1.05, D = 1.15, slatH = 0.14, gap = 0.07;
@@ -1786,7 +1788,12 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     crate.position.set(-2.3, 0, -3.6);
     crate.rotation.y = 0.32;
     scene.add(crate);
+    crateGroup = crate;
+    crateFrontZ = D / 2 + 0.0175;
   }
+
+  /* ----- enlaces en el escenario: pin de ubicación y placas de redes sociales ----- */
+  const links = createLinks3D({ scene, solids, crate: crateGroup, crateFrontZ, maxAniso: sharpAniso });
 
   /* ----- estaciones de cada sección ----- */
   const stations = buildStations({ scene, woodMat, logMat, solid });
@@ -1913,6 +1920,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     });
 
     positionGun();
+    links.layout(camera, HOME_POS.y);
     // el encuadre de la estación depende del ancho de pantalla
     if (mode === 'station' && currentStation) stationPose = poseFor(currentStation);
   }
@@ -1945,6 +1953,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       shieldTex.needsUpdate = true;
       stations.drawBanner(img);
     }
+    links.refresh(c.site || {});
     layout();
   }
 
@@ -2087,11 +2096,10 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     const hit = hits.find((h) => h.distance > 1.2);
     if (hit) aimPoint.copy(hit.point);
     else raycaster.ray.at(60, aimPoint);
-    const h = hit && hit.object.userData.section ? boards.find((b) => b.mesh === hit.object) : null;
-    if (h !== hovered) {
-      hovered = h;
-      crosshair.classList.toggle('target', !!h);
-    }
+    const ud = hit ? hit.object.userData : {};
+    hovered = ud.section ? boards.find((b) => b.mesh === hit.object) : null;
+    // la mira se marca sobre carteles y sobre los enlaces (pin de ubicación, redes sociales)
+    crosshair.classList.toggle('target', !!(ud.section || ud.link));
     pointerDirty = false;
     return hit;
   }
@@ -2180,6 +2188,10 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     } else if (ud.shield) {
       shield.swingV += 1.6;
       playWood();
+    } else if (ud.link) {
+      links.hit(ud.link);
+      playWood();
+      if (onLinkHit) setTimeout(() => onLinkHit(ud.link), 380); // se ve la explosión y luego se abre el widget
     }
   }
 
@@ -2337,6 +2349,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     if (base) gunPivot.position.set(base.x, base.y + Math.sin(t * 1.8) * 0.003 - gunAway * 0.45, base.z + Math.sin(t * 0.9) * 0.002 + gunAway * 0.1);
     gunPivot.visible = gunAway < 0.97;
     stations.animate(t);
+    links.update(t, dt);
     atmosphere.update(t);
     runner.update(dt);
     const kick = gunRecoil.userData.kick || 0;

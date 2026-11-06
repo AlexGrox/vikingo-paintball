@@ -135,6 +135,17 @@ body.in-section .welcome, #home.no-webgl .welcome { display: none; }
   .welcome p { font-size: 14px; }
 }
 
+/* ---------------- Widgets del escenario (mapa y redes) ---------------- */
+.widget { display: grid; gap: 14px; }
+.widget-head { display: flex; align-items: center; gap: 14px; }
+.widget-head strong { display: block; font-family: var(--font-ui); font-size: 22px; letter-spacing: .04em; }
+.widget-icon { width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 4px 14px rgba(0,0,0,.4); flex-shrink: 0; }
+.widget-sub { color: var(--muted); font-size: 15px; }
+.widget .btn { justify-self: start; }
+.widget-map { position: relative; border-radius: 10px; overflow: hidden; background: var(--bg); aspect-ratio: 16 / 10; }
+.widget-map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.widget-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
 /* ---------------- Bolas que revientan en la pantalla ---------------- */
 #screen-splats { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .screen-splat { position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); }
