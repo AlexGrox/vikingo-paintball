@@ -120,6 +120,11 @@ button { font: inherit; color: inherit; }
   transition: opacity 2.6s ease-in-out, transform 2.6s ease-in-out; /* desvanecimiento lento tras el primer disparo */
   animation: welcome-in .8s .4s backwards cubic-bezier(.2, .8, .2, 1); /* sin efecto al terminar: deja actuar al fundido */
 }
+.welcome-logo {
+  display: block; width: 128px; height: 128px; margin: -92px auto 6px; /* asoma por encima del recuadro */
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .6));
+}
+.welcome { text-align: left; }
 .welcome a { pointer-events: auto; font-weight: 700; color: var(--accent); }
 .welcome h1 {
   font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 2.2vw, 34px); line-height: 1.08;
@@ -133,6 +138,7 @@ body.in-section .welcome, #home.no-webgl .welcome { display: none; }
 @media (max-width: 760px), (max-aspect-ratio: 4/5) {
   .welcome { left: 16px; right: 16px; width: auto; top: auto; bottom: calc(max(22px, env(safe-area-inset-bottom)) + 52px); padding: 16px 18px 14px; }
   .welcome h1 { font-size: 23px; }
+  .welcome-logo { width: 84px; height: 84px; margin: -58px auto 2px; }
   .welcome p { font-size: 14px; }
 }
 
