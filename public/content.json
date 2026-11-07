@@ -207,26 +207,18 @@
           "type": "cards",
           "items": [
             {
-              "img": "",
-              "title": "Caja de 2000 bolas",
-              "tag": "45 €",
-              "text": "Bolas de calibre .68 de alta calidad, aptas para todo tipo de marcadoras.",
+              "img": "uploads/1794076599253-7fad44-pellets-naranja.png",
+              "title": "100 bolitas de recarga",
+              "tag": "$10.000",
+              "text": "Estos precios son solo para jugadores que ya hayan alquilado su marcadora. 100 Bolitas de calibre .68 de alta calidad, aptas para todo tipo de marcadoras.",
               "link": "",
               "linkText": "Consultar"
             },
             {
-              "img": "",
-              "title": "Máscara térmica",
-              "tag": "39 €",
-              "text": "Visor antivaho de doble lente. Imprescindible en invierno.",
-              "link": "",
-              "linkText": "Consultar"
-            },
-            {
-              "img": "",
-              "title": "Camiseta Vikingo",
-              "tag": "18 €",
-              "text": "Camiseta oficial del campo. Tallas S a XXL.",
+              "img": "uploads/1794076764821-apdzhm-500-bolitas.png",
+              "title": "500 bolitas de recarga",
+              "tag": "$40,000",
+              "text": "Estos precios son solo para jugadores que ya hayan alquilado su marcadora. 500 Bolitas de calibre .68 de alta calidad, aptas para todo tipo de marcadoras.",
               "link": "",
               "linkText": "Consultar"
             }
@@ -307,5 +299,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-07T17:56:35.080Z"
+  "updatedAt": "2026-11-07T18:41:25.236Z"
 }
