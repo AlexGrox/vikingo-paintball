@@ -41,25 +41,9 @@
           "items": [
             {
               "img": "",
-              "title": "Pack Guerrero",
-              "tag": "25 €/jugador",
-              "text": "Marcadora, máscara, peto y 200 bolas. 2 horas de juego.",
-              "link": "",
-              "linkText": ""
-            },
-            {
-              "img": "",
-              "title": "Pack Jarl",
-              "tag": "35 €/jugador",
-              "text": "Equipo completo, 500 bolas y bebida. 3 horas de juego.",
-              "link": "",
-              "linkText": ""
-            },
-            {
-              "img": "",
-              "title": "Pack Valhalla",
-              "tag": "45 €/jugador",
-              "text": "Para despedidas y cumpleaños: 800 bolas, escenarios exclusivos y fotos.",
+              "title": "Precio Promoción",
+              "tag": "$40.000 por jugador",
+              "text": "Marcadora, máscara, garrafa y 200 bolitas. En 1 hora de juego aproximadamente los jugadores ya han acabado todos los disparos iniciales, teniendo la oportunidad de recargar en cualquier momento.",
               "link": "",
               "linkText": ""
             }
@@ -229,5 +213,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-06T16:09:01.372Z"
+  "updatedAt": "2026-11-07T17:08:38.092Z"
 }
