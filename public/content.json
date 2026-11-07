@@ -27,7 +27,7 @@
     "reservas": {
       "label": "RESERVAS",
       "title": "Reserva tu batalla",
-      "subtitle": "Elige día, hora y tu horda. Nosotros ponemos el campo, el equipo y la pintura.",
+      "subtitle": "Puedes completar el formulario para reservar un día o simplemente comunicarte vía WhatsApp con nosotros (abajo está el número de contacto).",
       "cover": "",
       "blocks": [
         {
@@ -213,5 +213,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-07T17:08:38.092Z"
+  "updatedAt": "2026-11-07T17:10:35.203Z"
 }
