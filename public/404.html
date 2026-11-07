@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Vikingo Paintball Córdoba</title>
+  <script>
+    // Direcciones antiguas o inexistentes → sección equivalente de la web (o la portada)
+    (function () {
+      var path = location.pathname.toLowerCase().replace(/\/+$/, '');
+      var map = { reservas: 'reservas', reserva: 'reservas', turnos: 'reservas', contacto: 'reservas',
+        juegos: 'juegos', modalidades: 'juegos', precios: 'reservas',
+        tienda: 'tienda', productos: 'tienda', ranking: 'ranking' };
+      var key = path.split('/').pop();
+      location.replace('/' + (map[key] ? '#/' + map[key] : ''));
+    })();
+  </script>
+  <style>body{margin:0;background:#15100b;color:#f3e6c8;font:18px system-ui,sans-serif;display:grid;place-items:center;min-height:100vh}a{color:#e8b13a}</style>
+</head>
+<body>
+  <p>Redirigiendo a <a href="/">Vikingo Paintball Córdoba</a>…</p>
+</body>
+</html>
