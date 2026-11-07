@@ -67,11 +67,89 @@
         },
         {
           "id": "b3dcrh8",
-          "type": "form",
-          "title": "Solicitar reserva",
-          "submitText": "Enviar solicitud",
-          "successText": "¡Recibido, guerrero! Te contactaremos pronto para confirmar tu reserva.",
-          "modalidades": "Pack Guerrero, Pack Jarl, Pack Valhalla, Otro / no lo sé"
+          "type": "gform",
+          "title": "Reserva tu turno",
+          "intro": "Completa el formulario y te contactamos para confirmar tu reserva.",
+          "url": "https://docs.google.com/forms/d/e/1FAIpQLSfJdLBKzbN-lY-N5vv1k4hg_T4oryh_X7ppowVTlMBOZryaLg/viewform",
+          "action": "https://docs.google.com/forms/d/e/1FAIpQLSfJdLBKzbN-lY-N5vv1k4hg_T4oryh_X7ppowVTlMBOZryaLg/formResponse",
+          "submitText": "Enviar reserva",
+          "buttonText": "Completar en Google Forms",
+          "successText": "¡Recibido, guerrero! Te contactaremos por teléfono o WhatsApp para confirmar tu turno.",
+          "fields": [
+            {
+              "entry": 844778428,
+              "label": "Día de reserva",
+              "type": "date",
+              "required": true
+            },
+            {
+              "entry": 1727922417,
+              "label": "¿En qué horario te gustaría jugar?",
+              "type": "radio",
+              "required": true,
+              "full": true,
+              "options": [
+                "09 - 10 hs",
+                "10 - 11 hs",
+                "11 - 12 hs",
+                "12- 13 hs",
+                "15 - 16 hs",
+                "16 - 17 hs",
+                "17 - 18 hs",
+                "18 -19 hs"
+              ]
+            },
+            {
+              "entry": 627676165,
+              "label": "Nombre",
+              "type": "text",
+              "required": true
+            },
+            {
+              "entry": 1665717554,
+              "label": "Apellido",
+              "type": "text",
+              "required": true
+            },
+            {
+              "entry": 25269716,
+              "label": "Número de teléfono",
+              "type": "tel",
+              "required": true
+            },
+            {
+              "entry": 1982133080,
+              "label": "¿Cuántas personas juegan contigo?",
+              "type": "number"
+            },
+            {
+              "entry": 709004155,
+              "label": "¿Reservas en representación de tu equipo?",
+              "type": "radio",
+              "options": [
+                "Sí",
+                "No"
+              ]
+            },
+            {
+              "entry": 962005889,
+              "label": "¿Has jugado antes?",
+              "type": "radio",
+              "options": [
+                "Sí",
+                "No"
+              ]
+            },
+            {
+              "entry": 287606259,
+              "label": "¿Traes tu propia marcadora?",
+              "type": "radio",
+              "options": [
+                "Sí",
+                "No"
+              ]
+            }
+          ]
         }
       ]
     },

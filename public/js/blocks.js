@@ -5,6 +5,7 @@
 import { el, icon, iconBtn, toast, pickFile, formDialog, embedUrl, bindEditable, confirmDialog } from './ui.js';
 import { store, uploadFile, sendReserva, uid } from './store.js';
 import { mediaUrl } from './media.js';
+import { renderGForm, GFORM_DEFAULT } from './gform.js';
 
 /* ---------- Quill (editor de texto enriquecido), carga bajo demanda ---------- */
 let quillPromise = null;
@@ -405,6 +406,13 @@ export const BLOCK_TYPES = {
       }
       return wrap;
     },
+  },
+
+  gform: {
+    label: 'Formulario de Google',
+    icon: 'form',
+    create: () => structuredClone(GFORM_DEFAULT),
+    render: (b, ctx) => renderGForm(b, ctx, { bindEditable, formDialog, btn }),
   },
 
   form: {

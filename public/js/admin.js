@@ -89,7 +89,7 @@ export function renderBar() {
   }
   bar.hidden = false;
   const status = el('span.ab-status' + (store.dirty ? '.dirty' : ''), {}, store.dirty ? '● Cambios sin guardar' : 'Todo guardado');
-  bar.replaceChildren(
+  bar.replaceChildren(...[
     el('span.ab-title', {}, 'ADMIN'),
     el('label.toggle', {}, el('input', { type: 'checkbox', checked: store.editing, onchange: (e) => setEditing(e.target.checked) }), 'Editar'),
     el('button.btn.small.ghost', { type: 'button', onclick: openSiteSettings }, 'Ajustes del sitio'),
@@ -119,7 +119,7 @@ export function renderBar() {
         hooks.onAuth && hooks.onAuth(false);
       },
     }, 'Salir')
-  );
+  ].filter(Boolean)); // sin huecos: replaceChildren pintaría «null»
 }
 
 /* ---------- Ajustes del sitio ---------- */
