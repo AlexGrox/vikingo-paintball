@@ -33,7 +33,7 @@
         {
           "id": "b1dtsi3",
           "type": "text",
-          "html": "<h2>¿Cómo funciona?</h2><ol><li>Rellena el formulario con la fecha y el número de jugadores.</li><li>Te confirmamos disponibilidad por teléfono o email.</li><li>¡Llega 30 minutos antes para equiparte y recibir la charla de seguridad!</li></ol><p>Edad mínima: 12 años (menores con autorización). Grupos a partir de 8 jugadores.</p>"
+          "html": "<h2>¿Cómo funciona?</h2><ol><li>Rellena el formulario con la fecha y el número de jugadores.</li><li>Te confirmamos disponibilidad por teléfono o email.</li><li>¡Llega 30 minutos antes para equiparte y recibir la charla de seguridad!</li></ol><p>Edad mínima: 12 años (menores con autorización). Grupos a partir de 10 jugadores como mínimo.</p>"
         },
         {
           "id": "b2qtwv1",
@@ -229,5 +229,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-07T17:46:35.272Z"
+  "updatedAt": "2026-11-07T17:56:35.080Z"
 }
