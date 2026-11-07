@@ -1,0 +1,8 @@
+# Vikingo Paintball Córdoba
+User-agent: *
+Allow: /
+# archivos internos que no aportan a los buscadores
+Disallow: /uploads/
+Disallow: /content.json
+
+Sitemap: https://www.vikingo-paintball.com/sitemap.xml
