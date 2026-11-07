@@ -8,6 +8,7 @@ import { initAdmin, openLogin, renderBar } from './admin.js';
 import { isMuted, setMuted } from './audio.js';
 import { mediaUrl } from './media.js';
 import { openLinkWidget } from './widgets.js';
+import { updatePriceData } from './seo.js';
 
 const $ = (s) => document.querySelector(s);
 const home = $('#home');
@@ -23,6 +24,7 @@ const DEFAULT_LOGO = 'img/logo-vikingo.webp';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function applySite() {
+  updatePriceData(store.content); // precios de las tarjetas → datos para Google
   const { site, order, sections } = store.content;
   hint.textContent = site.hint || '';
   hint.hidden = !site.hint;
