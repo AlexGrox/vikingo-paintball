@@ -82,6 +82,11 @@ function setGhToken(t) {
 
 /* ---------- contenido ---------- */
 async function detectMode() {
+  // el servidor local solo existe al probar en el PC: en la web publicada no se consulta
+  if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.port === '8090') {
+    store.mode = 'static';
+    return null;
+  }
   try {
     const res = await fetch('api/content', { cache: 'no-store' });
     if (res.ok && (res.headers.get('content-type') || '').includes('json')) {

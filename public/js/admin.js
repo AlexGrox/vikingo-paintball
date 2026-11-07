@@ -152,7 +152,7 @@ function openSiteSettings() {
             } catch (e) { toast(e.message, 'err'); }
           },
         }, 'Cambiar logo'),
-        el('button.btn.small.ghost', { type: 'button', onclick: () => { draft.site.logo = 'img/logo-vikingo.png'; preview.src = draft.site.logo; } }, 'Logo por defecto'),
+        el('button.btn.small.ghost', { type: 'button', onclick: () => { draft.site.logo = 'img/logo-vikingo.webp'; preview.src = draft.site.logo; } }, 'Logo por defecto'),
         el('small.help', {}, 'Se muestra en el escudo 3D y en la cabecera. Mejor PNG con fondo transparente o redondo.')
       )
     ),

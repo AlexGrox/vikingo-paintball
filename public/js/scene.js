@@ -236,7 +236,9 @@ function splatCanvas() {
 /** Corteza de pino procedural: placas irregulares alargadas (celdas tipo Voronoi, repetibles
  *  sin costuras) separadas por grietas profundas, con mapa de relieve calculado de la altura. */
 export function barkTextures() {
-  const Wt = 256, Ht = 512;
+  const Wt = 256, Ht = 512; // espacio «virtual» de la textura
+  const S = QUALITY.mobile ? 2 : 1; // en móvil se calcula 1 de cada 2 píxeles (4 veces menos trabajo)
+  const Ow = Wt / S, Oh = Ht / S;
   // puntos de las placas (más separados en vertical: placas alargadas)
   const pts = [];
   for (let k = 0; k < 70; k++) {
@@ -247,11 +249,12 @@ export function barkTextures() {
     });
   }
   const SY = 0.38; // escala vertical de la distancia → placas ~2,6 veces más altas que anchas
-  const img = new ImageData(Wt, Ht);
-  const height = new Float32Array(Wt * Ht);
+  const img = new ImageData(Ow, Oh);
+  const height = new Float32Array(Ow * Oh);
   const tmp = new THREE.Color();
-  for (let py = 0; py < Ht; py++) {
-    for (let px = 0; px < Wt; px++) {
+  for (let oy = 0; oy < Oh; oy++) {
+    for (let ox = 0; ox < Ow; ox++) {
+      const px = ox * S, py = oy * S;
       let d1 = 1e9, d2 = 1e9, best = null;
       for (const p of pts) {
         // distancia toroidal: la textura se repite sin costuras
@@ -264,38 +267,39 @@ export function barkTextures() {
       const edge = d2 - d1; // 0 en la grieta entre dos placas
       const crack = Math.min(1, edge / 5.5); // anchura de la grieta
       const grain = Math.sin(px * 0.9 + Math.sin(py * 0.05) * 3) * 0.04 + (Math.random() - 0.5) * 0.08;
-      height[py * Wt + px] = crack * crack * best.lift + grain * crack;
+      height[oy * Ow + ox] = crack * crack * best.lift + grain * crack;
       // color: placa marrón-grisácea, grieta casi negra, bordes de placa algo más claros (desgaste)
       tmp.setHSL(best.h / 360, best.s / 100, Math.max(0, (best.l / 100) * (0.35 + 0.65 * crack) + (crack > 0.6 && crack < 0.85 ? 0.03 : 0) + grain * 0.25));
-      const k = (py * Wt + px) * 4;
+      const k = (oy * Ow + ox) * 4;
       img.data[k] = tmp.r * 255;
       img.data[k + 1] = tmp.g * 255;
       img.data[k + 2] = tmp.b * 255;
       img.data[k + 3] = 255;
     }
   }
-  const [c, g] = makeCanvas(Wt, Ht);
+  const [c, g] = makeCanvas(Ow, Oh);
   g.putImageData(img, 0, 0);
+  g.scale(1 / S, 1 / S); // los líquenes se dibujan en el espacio virtual
   // líquenes y polvo
   for (let k = 0; k < 900; k++) {
     g.fillStyle = rnd() < 0.6 ? `rgba(0,0,0,${R(0.08, 0.22)})` : `rgba(150,140,95,${R(0.05, 0.14)})`;
     g.fillRect(R(0, Wt), R(0, Ht), R(1, 3), R(1, 4));
   }
   // mapa de normales desde la altura (grietas hundidas, placas en relieve)
-  const H_ = (x, y) => height[((y + Ht) % Ht) * Wt + ((x + Wt) % Wt)];
-  const nimg = new ImageData(Wt, Ht);
-  for (let py = 0; py < Ht; py++) {
-    for (let px = 0; px < Wt; px++) {
-      const dx = (H_(px + 1, py) - H_(px - 1, py)) * 2.2;
-      const dy = (H_(px, py + 1) - H_(px, py - 1)) * 2.2;
-      const k = (py * Wt + px) * 4;
+  const H_ = (x, y) => height[((y + Oh) % Oh) * Ow + ((x + Ow) % Ow)];
+  const nimg = new ImageData(Ow, Oh);
+  for (let py = 0; py < Oh; py++) {
+    for (let px = 0; px < Ow; px++) {
+      const dx = ((H_(px + 1, py) - H_(px - 1, py)) * 2.2) / S;
+      const dy = ((H_(px, py + 1) - H_(px, py - 1)) * 2.2) / S;
+      const k = (py * Ow + px) * 4;
       nimg.data[k] = Math.max(0, Math.min(255, 128 - dx * 127));
       nimg.data[k + 1] = Math.max(0, Math.min(255, 128 + dy * 127));
       nimg.data[k + 2] = 255;
       nimg.data[k + 3] = 255;
     }
   }
-  const [nc, ng] = makeCanvas(Wt, Ht);
+  const [nc, ng] = makeCanvas(Ow, Oh);
   ng.putImageData(nimg, 0, 0);
   const map = new THREE.CanvasTexture(c);
   map.colorSpace = THREE.SRGBColorSpace;
@@ -470,7 +474,8 @@ function loadImage(src) {
   return new Promise((resolve) => {
     if (!src) return resolve(null);
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // solo para otros dominios: así comparte caché con las <img> de la página
+    if (/^https?:/i.test(src) && !src.startsWith(location.origin)) img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = src;
@@ -745,7 +750,7 @@ async function buildBadges(bodyMesh) {
   try {
     await Promise.race([document.fonts.load('74px "Germania One"'), new Promise((r) => setTimeout(r, 1500))]);
   } catch { /* sin fuente web */ }
-  const logo = await loadImage('img/logo-vikingo.png');
+  const logo = await loadImage('img/logo-vikingo.webp');
   const mat = (cnv) => new THREE.MeshStandardMaterial({
     map: canvasTex(cnv, 8), transparent: true, metalness: 0.55, roughness: 0.32, envMapIntensity: 1.4,
     polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, depthWrite: false,
@@ -1102,13 +1107,22 @@ function fireTexture() {
   const tex = new THREE.Texture();
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.repeat.set(1 / FIRE.cols, 1 / FIRE.rows);
-  if (!fireImage) fireImage = loadImage(FIRE.url);
-  fireImage.then((img) => {
-    if (!img) return;
+  fireWaiting.push(tex);
+  if (fireImage) fireImage.then(applyFire);
+  return tex;
+}
+const fireWaiting = [];
+function applyFire(img) {
+  if (!img) return;
+  for (const tex of fireWaiting.splice(0)) {
     tex.image = img;
     tex.needsUpdate = true;
-  });
-  return tex;
+  }
+}
+/** Descarga diferida de la hoja del fuego (788 KB): solo se ve en Ranking */
+function loadFire() {
+  if (!fireImage) fireImage = loadImage(FIRE.url);
+  fireImage.then(applyFire);
 }
 function setFireFrame(tex, f) {
   const col = f % FIRE.cols, row = Math.floor(f / FIRE.cols);
@@ -1418,6 +1432,9 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   if (QUALITY.shadowEvery > 1) renderer.shadowMap.autoUpdate = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
+  // comprobar errores de shaders obliga a esperar cada compilación (bloquea la página ~1-5 s en móvil):
+  // solo se hace al probar en el PC
+  renderer.debug.checkShaderErrors = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   const maxAniso = Math.min(renderer.capabilities.getMaxAnisotropy(), QUALITY.aniso);
   // logo, carteles y estandarte: filtrado máximo en todos los dispositivos (es muy barato y mejora mucho el texto)
   const sharpAniso = renderer.capabilities.getMaxAnisotropy();
@@ -2468,8 +2485,13 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   } catch { /* sin fuentes web */ }
   await refresh(content);
 
+  setTimeout(loadFire, 2500); // el fuego (solo en Ranking) no retrasa la carga inicial
   const ro = new ResizeObserver(() => layout());
   ro.observe(canvas);
+  try {
+    // compilación en paralelo (sin bloquear la página): la pantalla de carga sigue animada
+    await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 6000))]);
+  } catch { /* si el navegador no lo admite, se compila al dibujar */ }
   frame();
 
   return {

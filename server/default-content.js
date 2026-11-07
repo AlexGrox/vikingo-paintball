@@ -7,7 +7,7 @@ module.exports = {
   version: 1,
   site: {
     name: 'Vikingo Paintball',
-    logo: 'img/logo-vikingo.png',
+    logo: 'img/logo-vikingo.webp',
     hint: 'Apunta y dispara a un cartel',
     seoTitle: "Vikingo Paintball Córdoba | Paintball en Córdoba Capital",
     welcomeTitle: "Bienvenido a VIKINGO PAINTBALL CÓRDOBA",

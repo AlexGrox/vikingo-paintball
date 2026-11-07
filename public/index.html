@@ -51,6 +51,10 @@
       }
     }
   </script>
+  <!-- precargas: después del importmap -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" crossorigin />
+  <link rel="modulepreload" href="js/scene.js" />
 </head>
 <body>
   <!-- ======= PORTADA 3D ======= -->
@@ -81,13 +85,13 @@
     </div>
 
     <div id="loader" role="status">
-      <img src="img/logo-vikingo.png" alt="" width="120" height="120" />
+      <img src="img/logo-vikingo.webp" alt="" width="120" height="120" />
       <span>Preparando el campo…</span>
     </div>
 
     <!-- Navegación accesible / alternativa sin WebGL -->
     <nav id="fallback-nav" aria-label="Secciones">
-      <img id="fallback-logo" src="img/logo-vikingo.png" alt="Vikingo Paintball" width="180" height="180" />
+      <img id="fallback-logo" src="img/logo-vikingo.webp" alt="Vikingo Paintball" width="180" height="180" />
       <ul id="fallback-links"></ul>
     </nav>
   </main>
@@ -96,7 +100,7 @@
   <section id="panel" hidden aria-live="polite">
     <header class="panel-top">
       <a href="#/" class="panel-brand" id="panel-brand" aria-label="Volver al campo">
-        <img id="panel-logo" src="img/logo-vikingo.png" alt="" width="44" height="44" />
+        <img id="panel-logo" src="img/logo-vikingo.webp" alt="" width="44" height="44" />
         <span id="panel-sitename">Vikingo Paintball</span>
       </a>
       <nav class="panel-tabs" id="panel-tabs" aria-label="Secciones"></nav>

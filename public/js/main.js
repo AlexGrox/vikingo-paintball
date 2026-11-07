@@ -19,7 +19,7 @@ let scene = null;
 let navToken = 0; // invalida navegaciones anteriores si el usuario cambia de destino a mitad de viaje
 let shownKey = null; // sección cuya página está visible
 
-const DEFAULT_LOGO = 'img/logo-vikingo.png';
+const DEFAULT_LOGO = 'img/logo-vikingo.webp';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function applySite() {
@@ -136,6 +136,9 @@ function setupSound() {
 
 /* ---------- Arranque ---------- */
 async function start() {
+  // la escena 3D (y Three.js) se descarga mientras se carga el contenido
+  const sceneModule = import('./scene.js');
+  sceneModule.catch(() => {});
   try {
     await loadContent();
   } catch (e) {
@@ -182,7 +185,7 @@ async function start() {
 
   // Escena 3D (antes de enrutar, para que la primera sección ya aparezca en su estación)
   try {
-    scene = await import('./scene.js').then((m) =>
+    scene = await sceneModule.then((m) =>
       m.createScene({
         canvas: $('#scene'),
         crosshair: $('#crosshair'),
