@@ -2,6 +2,7 @@
    Vikingo Paintball — estilos
    ========================================================================== */
 :root {
+  color-scheme: only dark; /* evita que el modo oscuro automático del navegador invierta los colores */
   --bg: #15100b;
   --surface: #211810;
   --surface-2: #2d2218;
