@@ -485,7 +485,7 @@ function loadImage(src) {
 /* ==========================================================================
    Marcadora procedural (eje +Z = cañón, origen en la empuñadura)
    ========================================================================== */
-function buildMarker({ hopper = true } = {}) {
+export function buildMarker({ hopper = true } = {}) {
   /* Marcadora estilo carabina táctica (tipo Bravo One) con loader encima.
      Ejes: +Z = cañón, +Y = arriba; origen sobre el gatillo. Medidas aprox. en metros. */
   const root = new THREE.Group();

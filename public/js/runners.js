@@ -10,10 +10,10 @@
 import * as THREE from 'three';
 import { playWhoosh } from './audio.js';
 
-// 12 fotogramas de carrera (soldado con camuflaje, mirando a la derecha)
-const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 3, frames: 12, fps: 26, facesRight: true }; // ordenados: zancada abierta -> cerrada -> abierta
-const HEIGHT = 1.78; // altura del sprite (m): el soldado agachado corriendo mide ~1,7 m
-const ASPECT = 0.867; // alto / ancho de cada fotograma
+// 16 fotogramas de un jugador de paintball 3D propio (ciclo de carrera completo, mira a la derecha)
+const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 4, frames: 16, fps: 27, facesRight: true };
+const HEIGHT = 1.81; // altura del fotograma (m): 540 px del render a 297,7 px/m (jugador de ~1,75 m)
+const ASPECT = 1.0189; // alto / ancho de cada fotograma
 const SPEED = [3.8, 4.8]; // m/s (trote táctico)
 const PAUSE = [2, 5]; // segundos entre una pasada y la siguiente
 export const PAINT = ['#ff3b1f', '#ffd60a', '#27e36b', '#1e90ff', '#ff2d92', '#b45cff', '#ff8a00', '#00e5ff'];
@@ -44,12 +44,12 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
 
   const mat = new THREE.SpriteMaterial({
     map: tex,
-    color: 0x9a8b76, // colores reales algo oscurecidos y cálidos: el sol está detrás (contraluz)
+    color: 0xb3a38c, // algo oscurecido y cálido: el sol está detrás (contraluz)
     transparent: true,
     alphaTest: 0.5, // escribe profundidad: la bruma que queda detrás no se dibuja encima
   });
   const sprite = new THREE.Sprite(mat);
-  sprite.center.set(0.5, 0.012); // los pies en el suelo
+  sprite.center.set(0.5, 0.0275); // los pies en el suelo
   sprite.scale.set(HEIGHT / ASPECT, HEIGHT, 1);
   sprite.visible = false;
   sprite.renderOrder = 3; // por encima de los bancos de bruma (los troncos lo siguen tapando)
@@ -234,9 +234,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
         return;
       }
       sprite.position.lerpVectors(run.start, run.end, run.s / run.len);
-      // rebote de la zancada: arriba con las piernas abiertas (vuelo), abajo al apoyar
-      const phase = (run.anim * SHEET.fps * (run.speed / 4.3)) / SHEET.frames;
-      sprite.position.y = groundHeight(sprite.position.x, sprite.position.z) - 0.05 + 0.07 * (0.5 + 0.5 * Math.cos(phase * Math.PI * 2));
+      sprite.position.y = groundHeight(sprite.position.x, sprite.position.z) - 0.03; // el rebote ya va en los fotogramas
       // la perspectiva ya lo agranda al acercarse; se refuerza un poco para que se note más
       const dist = camera.position.distanceTo(sprite.position);
       const k = THREE.MathUtils.clamp(1 + (48 - dist) * 0.007, 0.88, 1.22);
