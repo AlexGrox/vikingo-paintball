@@ -173,7 +173,7 @@ export async function login(secret) {
     setToken(token);
   } else {
     const t = (secret || '').trim();
-    if (!t) throw new Error('Pega la clave de GitHub');
+    if (!t) throw new Error('Acceso denegado.');
     setGitHubToken(t);
     await checkAccess();
     setGhToken(t);

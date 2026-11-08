@@ -30,9 +30,9 @@ export function openLogin() {
   const input = el('input', { type: 'password', autocomplete: isStatic ? 'off' : 'current-password', required: true, spellcheck: false });
   const err = el('p.form-msg.err', { hidden: true });
   const form = el('form', {},
-    el('label.field', {}, el('span', {}, isStatic ? 'Clave de GitHub' : 'Contraseña'), input),
+    el('label.field', {}, el('span', {}, isStatic ? 'Aquí no hay nada interesante para ver' : 'Contraseña'), input),
     isStatic
-      ? el('p.help', {}, 'Pega tu clave de GitHub (fine-grained token con permiso «Contents: Read and write» sobre el repositorio de la web). Se guarda solo en este navegador.')
+      ? el('p.help', {}, 'Solo el administrador ingresa.')
       : null,
     err);
   let closeFn;
@@ -45,7 +45,8 @@ export function openLogin() {
       hooks.onAuth && hooks.onAuth(true);
     } catch (e) {
       err.hidden = false;
-      err.textContent = e.message;
+      // mensaje genérico: no dar pistas sobre cómo se administra la web
+      err.textContent = isStatic ? 'Acceso denegado.' : e.message;
       input.select();
     }
   };
