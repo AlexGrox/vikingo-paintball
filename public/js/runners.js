@@ -10,10 +10,9 @@
 import * as THREE from 'three';
 import { playWhoosh } from './audio.js';
 
-// 16 fotogramas de un jugador de paintball 3D propio (ciclo de carrera completo, mira a la derecha)
-const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 4, frames: 16, fps: 27, facesRight: true };
-const HEIGHT = 1.81; // altura del fotograma (m): 540 px del render a 297,7 px/m (jugador de ~1,75 m)
-const ASPECT = 1.0189; // alto / ancho de cada fotograma
+const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 4, frames: 16, fps: 24 };
+const HEIGHT = 1.85; // altura del sprite (m)
+const ASPECT = 0.9854; // alto / ancho de cada fotograma
 const SPEED = [3.8, 4.8]; // m/s (trote táctico)
 const PAUSE = [2, 5]; // segundos entre una pasada y la siguiente
 export const PAINT = ['#ff3b1f', '#ffd60a', '#27e36b', '#1e90ff', '#ff2d92', '#b45cff', '#ff8a00', '#00e5ff'];
@@ -44,12 +43,12 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
 
   const mat = new THREE.SpriteMaterial({
     map: tex,
-    color: 0xb3a38c, // algo oscurecido y cálido: el sol está detrás (contraluz)
+    color: 0x1c160f, // silueta oscura y cálida, como los troncos a contraluz
     transparent: true,
-    alphaTest: 0.5, // escribe profundidad: la bruma que queda detrás no se dibuja encima
+    alphaTest: 0.4, // escribe profundidad: la bruma que queda detrás no se dibuja encima
   });
   const sprite = new THREE.Sprite(mat);
-  sprite.center.set(0.5, 0.0275); // los pies en el suelo
+  sprite.center.set(0.5, 0.02); // los pies en el suelo
   sprite.scale.set(HEIGHT / ASPECT, HEIGHT, 1);
   sprite.visible = false;
   sprite.renderOrder = 3; // por encima de los bancos de bruma (los troncos lo siguen tapando)
@@ -61,10 +60,9 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
 
   function setFrame(i, flip) {
     const col = i % SHEET.cols, row = Math.floor(i / SHEET.cols);
-    // flip = corre hacia la derecha de la pantalla; si el dibujo mira al otro lado, se voltea la textura
-    const mirror = SHEET.facesRight ? !flip : flip;
-    tex.repeat.x = (mirror ? -1 : 1) / SHEET.cols;
-    tex.offset.set((col + (mirror ? 1 : 0)) / SHEET.cols, 1 - (row + 1) / SHEET.rows);
+    // la silueta mira a la izquierda; para correr a la derecha se voltea la textura
+    tex.repeat.x = (flip ? -1 : 1) / SHEET.cols;
+    tex.offset.set((col + (flip ? 1 : 0)) / SHEET.cols, 1 - (row + 1) / SHEET.rows);
   }
 
   const ray = new THREE.Raycaster();
@@ -234,7 +232,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
         return;
       }
       sprite.position.lerpVectors(run.start, run.end, run.s / run.len);
-      sprite.position.y = groundHeight(sprite.position.x, sprite.position.z) - 0.03; // el rebote ya va en los fotogramas
+      sprite.position.y = groundHeight(sprite.position.x, sprite.position.z) - 0.05;
       // la perspectiva ya lo agranda al acercarse; se refuerza un poco para que se note más
       const dist = camera.position.distanceTo(sprite.position);
       const k = THREE.MathUtils.clamp(1 + (48 - dist) * 0.007, 0.88, 1.22);
