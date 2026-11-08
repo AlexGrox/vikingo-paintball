@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { playWhoosh } from './audio.js';
 
 // 12 fotogramas de carrera (soldado con camuflaje, mirando a la derecha)
-const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 3, frames: 12, fps: 18, facesRight: true };
+const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 3, frames: 12, fps: 26, facesRight: true }; // ordenados: zancada abierta -> cerrada -> abierta
 const HEIGHT = 1.78; // altura del sprite (m): el soldado agachado corriendo mide ~1,7 m
 const ASPECT = 0.867; // alto / ancho de cada fotograma
 const SPEED = [3.8, 4.8]; // m/s (trote táctico)
@@ -234,7 +234,9 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
         return;
       }
       sprite.position.lerpVectors(run.start, run.end, run.s / run.len);
-      sprite.position.y = groundHeight(sprite.position.x, sprite.position.z) - 0.05;
+      // rebote de la zancada: arriba con las piernas abiertas (vuelo), abajo al apoyar
+      const phase = (run.anim * SHEET.fps * (run.speed / 4.3)) / SHEET.frames;
+      sprite.position.y = groundHeight(sprite.position.x, sprite.position.z) - 0.05 + 0.07 * (0.5 + 0.5 * Math.cos(phase * Math.PI * 2));
       // la perspectiva ya lo agranda al acercarse; se refuerza un poco para que se note más
       const dist = camera.position.distanceTo(sprite.position);
       const k = THREE.MathUtils.clamp(1 + (48 - dist) * 0.007, 0.88, 1.22);
