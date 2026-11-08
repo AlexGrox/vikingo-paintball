@@ -35,9 +35,18 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.repeat.set(1 / SHEET.cols, 1 / SHEET.rows);
   const img = new Image();
+  let alpha = null; // transparencia de la hoja, para saber si un disparo cae sobre la silueta
   img.onload = () => {
     tex.image = img;
     tex.needsUpdate = true;
+    try {
+      const c = document.createElement('canvas');
+      c.width = img.width;
+      c.height = img.height;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(img, 0, 0);
+      alpha = { data: g.getImageData(0, 0, c.width, c.height).data, w: c.width, h: c.height };
+    } catch { /* sin acceso a los píxeles: se acepta el recuadro entero */ }
   };
   img.src = SHEET.url;
 
@@ -215,7 +224,29 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
     }
   }
 
+  /** ¿El rayo (ya preparado con setFromCamera) toca la silueta visible del jugador? */
+  function hitTest(raycaster) {
+    if (!run || run.hit || !sprite.visible) return null;
+    const h = raycaster.intersectObject(sprite, false)[0];
+    if (!h || !h.uv) return null;
+    if (alpha) {
+      const u = tex.offset.x + h.uv.x * tex.repeat.x;
+      const v = tex.offset.y + h.uv.y * tex.repeat.y;
+      const x = Math.min(alpha.w - 1, Math.max(0, Math.floor(u * alpha.w)));
+      const y = Math.min(alpha.h - 1, Math.max(0, Math.floor((1 - v) * alpha.h))); // la imagen va invertida (flipY)
+      if (alpha.data[(y * alpha.w + x) * 4 + 3] < 90) return null; // hueco transparente
+    }
+    return { point: h.point.clone(), distance: h.distance, offset: h.point.clone().sub(sprite.position) };
+  }
+
   return {
+    hitTest,
+    /** Posición actual del jugador (para que la bola lo siga en vuelo) */
+    position: () => (run && sprite.visible ? sprite.position : null),
+    /** Alcanzado: queda eliminado (ya no dispara) */
+    markHit() {
+      if (run) run.hit = true;
+    },
     update(dt) {
       updateBalls(dt);
       if (!run) {
@@ -240,7 +271,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
       setFrame(Math.floor(run.anim * SHEET.fps * (run.speed / 4.3)) % SHEET.frames, run.flip);
 
       // los que avanzan hacia la cámara disparan ráfagas (solo en la portada y si se le ve)
-      if (run.approach && canShoot() && dist < 70) {
+      if (run.approach && !run.hit && canShoot() && dist < 70) {
         run.nextBurst -= dt;
         if (run.nextBurst <= 0) {
           if (run.burstLeft === 0) {

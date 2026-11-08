@@ -17,7 +17,7 @@ import { mediaUrl } from './media.js';
 import { tireAssets, TIRE_HEIGHT, createDrum, DRUM_HEIGHT, createWoodBarrel, cardboardMaterial, thatchMaterial } from './props.js';
 import { createRunner, PAINT as RUNNER_PAINT } from './runners.js';
 import { createLinks3D } from './links3d.js';
-import { screenSplat, preloadScreenSplats } from './screen-splats.js';
+import { screenSplat, preloadScreenSplats, floatMessage } from './screen-splats.js';
 
 const PAINT_COLORS = ['#ff3b1f', '#ffd60a', '#27e36b', '#1e90ff', '#ff2d92', '#b45cff', '#ff8a00', '#00e5ff'];
 const BALL_SPEED = 38; // m/s (exagerado a escala de juego)
@@ -2205,14 +2205,17 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     if (shotCount++ === 0 && onFirstShot) onFirstShot();
 
     const hit = updateAim();
-    const end = hit ? hit.point.clone() : raycaster.ray.at(90, new THREE.Vector3());
+    // ¿el jugador que corre está bajo la mira (y delante de lo demás)?
+    const rHit = runner.hitTest(raycaster);
+    const onRunner = rHit && (!hit || rHit.distance < hit.distance);
+    const end = onRunner ? rHit.point.clone() : hit ? hit.point.clone() : raycaster.ray.at(90, new THREE.Vector3());
     const start = muzzle.getWorldPosition(new THREE.Vector3());
     const color = new THREE.Color(PAINT_COLORS[Math.floor(Math.random() * PAINT_COLORS.length)]);
     const mesh = new THREE.Mesh(ballGeo, new THREE.MeshStandardMaterial({ color, roughness: 0.2, metalness: 0, emissive: color, emissiveIntensity: 0.25 }));
     mesh.position.copy(start);
     scene.add(mesh);
     const dist = start.distanceTo(end);
-    balls.push({ mesh, start, end, t: 0, dur: Math.max(0.06, dist / BALL_SPEED), arc: Math.min(0.35, dist * 0.018), hit: !!hit, color });
+    balls.push({ mesh, start, end, t: 0, dur: Math.max(0.06, dist / BALL_SPEED), arc: Math.min(0.35, dist * 0.018), hit: !!hit || onRunner, color, runner: onRunner ? rHit.offset : null });
 
     // retroceso + soplo de aire
     gunRecoil.userData.kick = 1;
@@ -2228,6 +2231,16 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     scene.remove(ball.mesh);
     ball.mesh.material.dispose();
     if (!ball.hit) return;
+    if (ball.runner) {
+      // impacto en el jugador que corre
+      if (!runner.position()) return; // ya salió de escena
+      const toCam = camera.position.clone().sub(ball.end).normalize();
+      burst(ball.end, toCam, ball.color);
+      playSplat(1);
+      runner.markHit();
+      floatMessage('¡Le pegaste!');
+      return;
+    }
     // volver a trazar al llegar (los carteles se mueven)
     const dir = tmpV.copy(ball.end).sub(ball.start).normalize();
     raycaster.set(ball.end.clone().addScaledVector(dir, -0.6), dir);
@@ -2465,6 +2478,11 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
         balls.splice(i, 1);
         impact(b);
         continue;
+      }
+      if (b.runner) {
+        // la bola sigue al jugador al que se apuntó (corre mientras la bola vuela)
+        const rp = runner.position();
+        if (rp) b.end.copy(rp).add(b.runner);
       }
       b.mesh.position.lerpVectors(b.start, b.end, b.t);
       b.mesh.position.y += Math.sin(Math.PI * b.t) * b.arc;

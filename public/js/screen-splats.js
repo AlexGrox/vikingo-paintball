@@ -227,3 +227,13 @@ export function screenSplat(x, y, color) {
 export function clearScreenSplats() {
   if (root) root.replaceChildren();
 }
+
+/** Mensaje que sube desde el centro de la pantalla y se desvanece (p. ej. «¡Le pegaste!») */
+export function floatMessage(text) {
+  const el = document.createElement('div');
+  el.className = 'float-msg';
+  el.setAttribute('role', 'status');
+  el.textContent = text;
+  document.body.append(el);
+  setTimeout(() => el.remove(), 2000);
+}

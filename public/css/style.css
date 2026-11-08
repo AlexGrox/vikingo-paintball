@@ -199,6 +199,21 @@ body.in-section .welcome, #home.no-webgl .welcome { display: none; }
 .widget-map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .widget-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
+/* ---------------- «¡Le pegaste!» ---------------- */
+.float-msg {
+  position: fixed; left: 50%; top: 50%; z-index: 7; pointer-events: none; white-space: nowrap;
+  font-family: var(--font-display); font-size: clamp(42px, 7vw, 86px); line-height: 1; color: #ffd34d;
+  text-shadow: 0 3px 0 #5a3a08, 0 0 0.25em rgba(255, 170, 40, .55), 0 6px 24px rgba(0, 0, 0, .7);
+  animation: float-up 1.9s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+@keyframes float-up {
+  0% { opacity: 0; transform: translate(-50%, -20%) scale(.6); }
+  12% { opacity: 1; transform: translate(-50%, -55%) scale(1.12); }
+  25% { opacity: 1; transform: translate(-50%, -70%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -330%) scale(1); }
+}
+body.in-section .float-msg { display: none; }
+
 /* ---------------- Bolas que revientan en la pantalla ---------------- */
 #screen-splats { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .screen-splat { position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); }
