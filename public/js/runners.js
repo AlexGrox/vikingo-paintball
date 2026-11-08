@@ -10,9 +10,10 @@
 import * as THREE from 'three';
 import { playWhoosh } from './audio.js';
 
-const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 4, frames: 16, fps: 24 };
-const HEIGHT = 1.85; // altura del sprite (m)
-const ASPECT = 0.9854; // alto / ancho de cada fotograma
+// 12 fotogramas de carrera (soldado con camuflaje, mirando a la derecha)
+const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 3, frames: 12, fps: 18, facesRight: true };
+const HEIGHT = 1.78; // altura del sprite (m): el soldado agachado corriendo mide ~1,7 m
+const ASPECT = 0.867; // alto / ancho de cada fotograma
 const SPEED = [3.8, 4.8]; // m/s (trote táctico)
 const PAUSE = [2, 5]; // segundos entre una pasada y la siguiente
 export const PAINT = ['#ff3b1f', '#ffd60a', '#27e36b', '#1e90ff', '#ff2d92', '#b45cff', '#ff8a00', '#00e5ff'];
@@ -43,12 +44,12 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
 
   const mat = new THREE.SpriteMaterial({
     map: tex,
-    color: 0x1c160f, // silueta oscura y cálida, como los troncos a contraluz
+    color: 0x9a8b76, // colores reales algo oscurecidos y cálidos: el sol está detrás (contraluz)
     transparent: true,
-    alphaTest: 0.4, // escribe profundidad: la bruma que queda detrás no se dibuja encima
+    alphaTest: 0.5, // escribe profundidad: la bruma que queda detrás no se dibuja encima
   });
   const sprite = new THREE.Sprite(mat);
-  sprite.center.set(0.5, 0.02); // los pies en el suelo
+  sprite.center.set(0.5, 0.012); // los pies en el suelo
   sprite.scale.set(HEIGHT / ASPECT, HEIGHT, 1);
   sprite.visible = false;
   sprite.renderOrder = 3; // por encima de los bancos de bruma (los troncos lo siguen tapando)
@@ -60,9 +61,10 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
 
   function setFrame(i, flip) {
     const col = i % SHEET.cols, row = Math.floor(i / SHEET.cols);
-    // la silueta mira a la izquierda; para correr a la derecha se voltea la textura
-    tex.repeat.x = (flip ? -1 : 1) / SHEET.cols;
-    tex.offset.set((col + (flip ? 1 : 0)) / SHEET.cols, 1 - (row + 1) / SHEET.rows);
+    // flip = corre hacia la derecha de la pantalla; si el dibujo mira al otro lado, se voltea la textura
+    const mirror = SHEET.facesRight ? !flip : flip;
+    tex.repeat.x = (mirror ? -1 : 1) / SHEET.cols;
+    tex.offset.set((col + (mirror ? 1 : 0)) / SHEET.cols, 1 - (row + 1) / SHEET.rows);
   }
 
   const ray = new THREE.Raycaster();
