@@ -241,53 +241,23 @@
           "id": "b8tzm5n",
           "type": "table",
           "headers": [
-            "#",
+            "PUESTO",
             "Jugador",
             "Equipo",
             "Partidas",
-            "Eliminaciones",
-            "Puntos"
+            "TIEMPO JUGADO",
+            "TORNEOS",
+            "GANADOS"
           ],
           "rows": [
             [
               "1",
-              "Ragnar",
-              "Lobos de Odín",
-              "24",
-              "187",
-              "2450"
-            ],
-            [
-              "2",
-              "Lagertha",
-              "Escudos Rojos",
-              "22",
-              "171",
-              "2310"
-            ],
-            [
-              "3",
-              "Bjorn",
-              "Lobos de Odín",
-              "19",
-              "150",
-              "1980"
-            ],
-            [
-              "4",
-              "Freydis",
-              "Cuervos",
-              "17",
-              "129",
-              "1720"
-            ],
-            [
-              "5",
-              "Ivar",
-              "Escudos Rojos",
-              "15",
-              "101",
-              "1395"
+              "Tu nombre",
+              "Tu equipo",
+              "0",
+              "",
+              "0",
+              ""
             ]
           ]
         },
@@ -299,5 +269,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-08T00:13:41.063Z"
+  "updatedAt": "2026-11-08T19:47:47.483Z"
 }
