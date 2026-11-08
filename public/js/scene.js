@@ -1841,6 +1841,12 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = sharpAniso; // texto del cartel siempre nítido
     const front = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, emissive: 0xffb347, emissiveMap: tex, emissiveIntensity: 0 });
+    // versión sin texto: cuando el nombre se dibuja en HTML encima (pantallas pequeñas)
+    const frontBlank = new THREE.MeshStandardMaterial({ map: blankBoardTex(), roughness: 0.85, emissive: 0xffb347, emissiveMap: blankBoardTex(), emissiveIntensity: 0 });
+    const labelEl = document.createElement('span');
+    labelEl.className = 'board-label';
+    labelEl.setAttribute('aria-hidden', 'true');
+    labelLayer.append(labelEl);
     const mesh = new THREE.Mesh(boardGeo, [woodMat, woodMat, woodMat, woodMat, front, woodMat]);
     const ropeN = 0.18, hN = 1 / BOARD_RATIO;
     mesh.position.y = -(ropeN + hN / 2);
@@ -1855,9 +1861,64 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     }
     gate.add(pivot);
     solid(mesh);
-    const b = { key, pivot, rig, mesh, canvas: cnv, tex, front, label: null, swing: 0, swingV: 0, phase: R(0, 6), hover: 0 };
+    const b = { key, pivot, rig, mesh, canvas: cnv, tex, front, frontBlank, labelEl, label: null, swing: 0, swingV: 0, phase: R(0, 6), hover: 0, emPerChar: 0.6 };
     boards.push(b);
     return b;
+  }
+
+  /* ---- nombres de los carteles en HTML (nítidos en pantallas pequeñas) ---- */
+  const labelLayer = document.createElement('div');
+  labelLayer.id = 'board-labels';
+  labelLayer.hidden = true;
+  canvas.after(labelLayer);
+  let blankTex = null;
+  function blankBoardTex() {
+    if (!blankTex) {
+      const c = document.createElement('canvas');
+      c.width = 1024;
+      c.height = 400;
+      drawBoard(c, '');
+      blankTex = new THREE.CanvasTexture(c);
+      blankTex.colorSpace = THREE.SRGBColorSpace;
+      blankTex.anisotropy = sharpAniso;
+    }
+    return blankTex;
+  }
+  const measureCtx = document.createElement('canvas').getContext('2d');
+  /** ancho del texto (en «em») para ajustar la letra al cartel como en la textura */
+  function textEm(text) {
+    measureCtx.font = '100px "Germania One", Impact, serif';
+    return Math.max(1, measureCtx.measureText(text.toUpperCase()).width / 100);
+  }
+  let htmlLabels = false; // se decide en layout(): móvil o pantalla vertical
+  let labelsOn = false;
+  function setLabels(on) {
+    if (on === labelsOn) return;
+    labelsOn = on;
+    labelLayer.hidden = !on;
+    for (const b of boards) b.mesh.material[4] = on ? b.frontBlank : b.front;
+  }
+  const lc = new THREE.Vector3(), lr = new THREE.Vector3(), lu = new THREE.Vector3();
+  function updateLabels() {
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    const hN = 1 / BOARD_RATIO;
+    for (const b of boards) {
+      b.mesh.updateWorldMatrix(true, false);
+      // centro, borde derecho y borde superior de la cara frontal, proyectados a la pantalla
+      lc.set(0, 0, 0.026).applyMatrix4(b.mesh.matrixWorld).project(camera);
+      lr.set(0.5, 0, 0.026).applyMatrix4(b.mesh.matrixWorld).project(camera);
+      lu.set(0, hN / 2, 0.026).applyMatrix4(b.mesh.matrixWorld).project(camera);
+      const x = (lc.x + 1) * W / 2, y = (1 - lc.y) * H / 2;
+      const rx = (lr.x + 1) * W / 2 - x, ry = (1 - lr.y) * H / 2 - y;
+      const ux = (lu.x + 1) * W / 2 - x, uy = (1 - lu.y) * H / 2 - y;
+      const w = Math.hypot(rx, ry) * 2, h = Math.hypot(ux, uy) * 2;
+      const size = Math.min(h * 0.575, (w * 0.8) / b.emPerChar); // mismas proporciones que drawBoard
+      const st = b.labelEl.style;
+      st.width = w.toFixed(1) + 'px';
+      st.height = h.toFixed(1) + 'px';
+      st.fontSize = size.toFixed(1) + 'px';
+      st.transform = `translate(${(x - w / 2).toFixed(1)}px, ${(y - h / 2).toFixed(1)}px) rotate(${Math.atan2(ry, rx).toFixed(4)}rad)`;
+    }
   }
 
   // escudo
@@ -1938,6 +1999,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
 
     positionGun();
     links.layout(camera, HOME_POS.y);
+    htmlLabels = QUALITY.mobile || camera.aspect < 1;
     // el encuadre de la estación depende del ancho de pantalla
     if (mode === 'station' && currentStation) stationPose = poseFor(currentStation);
   }
@@ -1952,6 +2014,8 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       if (label !== b.label) {
         b.label = label;
         drawBoard(b.canvas, label);
+        b.labelEl.textContent = label;
+        b.emPerChar = textEm(label);
         b.tex.needsUpdate = true;
       }
       // copia del cartel en la estación de la sección (comparte textura)
@@ -2382,9 +2446,12 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       b.pivot.rotation.z = Math.sin(t * 0.9 + b.phase) * 0.018;
       const target = b === hovered ? 1 : 0;
       b.hover += (target - b.hover) * Math.min(1, dt * 10);
-      b.front.emissiveIntensity = b.hover * 0.28;
+      b.front.emissiveIntensity = b.frontBlank.emissiveIntensity = b.hover * 0.28;
       b.rig.position.z = b.hover * 0.15;
     }
+    // nombres en HTML solo en la portada (al viajar a una sección vuelve el texto 3D)
+    setLabels(htmlLabels && mode === 'home' && !tween);
+    if (labelsOn) updateLabels();
     shield.swingV += (-shield.swing * 10 - shield.swingV * 1.6) * dt;
     shield.swing += shield.swingV * dt;
     shield.pivot.rotation.x = shield.swing;

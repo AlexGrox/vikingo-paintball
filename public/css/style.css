@@ -52,6 +52,18 @@ button { font: inherit; color: inherit; }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 #home.has-scene, #home.has-scene #scene { cursor: none; }
 
+/* nombres de los carteles en HTML (encima del 3D, nítidos en celulares) */
+#board-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+#board-labels[hidden] { display: none; }
+.board-label {
+  position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center;
+  transform-origin: 50% 50%; white-space: nowrap; line-height: 1; padding-top: 0.06em;
+  font-family: 'Germania One', Impact, serif; text-transform: uppercase; color: #f6e4b6;
+  text-shadow: 0 0.05em 0 #1c1008, 0.035em 0 0 #1c1008, -0.035em 0 0 #1c1008, 0 -0.035em 0 #1c1008,
+               0.03em 0.03em 0 #1c1008, -0.03em 0.03em 0 #1c1008, 0 0.09em 0.12em rgba(0,0,0,.55);
+}
+body.in-section #board-labels { display: none; }
+
 #crosshair {
   position: fixed; left: 0; top: 0; width: 64px; height: 64px;
   margin: -32px 0 0 -32px; pointer-events: none; z-index: 5;
