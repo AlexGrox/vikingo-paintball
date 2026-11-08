@@ -11,10 +11,7 @@ import * as THREE from 'three';
 import { playWhoosh } from './audio.js';
 
 const SHEET = { url: 'img/corredor-sheet.webp', cols: 4, rows: 4, frames: 16, fps: 24 };
-const HEIGHT = 2.15; // altura del sprite (m): figura agachada corriendo ≈ persona de 1,85 m
-// en celulares la pantalla es pequeña y la cámara de las estaciones está más lejos: corredor algo mayor y más cerca
-const MOBILE = (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-const SIZE = HEIGHT * (MOBILE ? 1.25 : 1);
+const HEIGHT = 1.85; // altura del sprite (m)
 const ASPECT = 0.9854; // alto / ancho de cada fotograma
 const SPEED = [3.8, 4.8]; // m/s (trote táctico)
 const PAUSE = [2, 5]; // segundos entre una pasada y la siguiente
@@ -52,7 +49,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
   });
   const sprite = new THREE.Sprite(mat);
   sprite.center.set(0.5, 0.02); // los pies en el suelo
-  sprite.scale.set(SIZE / ASPECT, SIZE, 1);
+  sprite.scale.set(HEIGHT / ASPECT, HEIGHT, 1);
   sprite.visible = false;
   sprite.renderOrder = 3; // por encima de los bancos de bruma (los troncos lo siguen tapando)
   scene.add(sprite);
@@ -125,7 +122,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
     for (let k = 0; k < spawnTries; k++) {
       // punto de paso: dentro del encuadre, en el bosque y visible
       const a = Math.atan(R(-0.95, 0.95) * tanH);
-      const d = MOBILE ? R(10, 44) : R(14, 48); // más cerca: se distingue mejor
+      const d = R(18, 70);
       const P = camera.position.clone().addScaledVector(f, Math.cos(a) * d).addScaledVector(r, Math.sin(a) * d);
       P.y = 0;
       if (isClear(P.x, P.z, 2) || !visibleAt(P.x, P.z)) continue;
@@ -149,7 +146,7 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
       const steps = Math.ceil(len / 2);
       for (let i = 0; i <= steps; i++) {
         p.lerpVectors(start, end, i / steps);
-        if (visibleAt(p.x, p.z, 50)) seen++;
+        if (visibleAt(p.x, p.z, 65)) seen++;
       }
       if (seen * 2 < 8) continue;
       // sentido en pantalla para voltear la silueta
@@ -238,8 +235,8 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
       sprite.position.y = groundHeight(sprite.position.x, sprite.position.z) - 0.05;
       // la perspectiva ya lo agranda al acercarse; se refuerza un poco para que se note más
       const dist = camera.position.distanceTo(sprite.position);
-      const k = THREE.MathUtils.clamp(1 + (40 - dist) * 0.007, 1, 1.22); // nunca más pequeño que su tamaño real
-      sprite.scale.set((SIZE / ASPECT) * k, SIZE * k, 1);
+      const k = THREE.MathUtils.clamp(1 + (48 - dist) * 0.007, 0.88, 1.22);
+      sprite.scale.set((HEIGHT / ASPECT) * k, HEIGHT * k, 1);
       setFrame(Math.floor(run.anim * SHEET.fps * (run.speed / 4.3)) % SHEET.frames, run.flip);
 
       // los que avanzan hacia la cámara disparan ráfagas (solo en la portada y si se le ve)
