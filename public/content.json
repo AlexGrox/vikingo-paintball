@@ -167,7 +167,7 @@
               "img": "uploads/1793980851494-wd12rh-juego-de-banderas.png",
               "title": "Captura la bandera",
               "tag": "Clásico",
-              "text": "Dos equipos, dos bases y una bandera. Gana quien la lleve a su campamento.",
+              "text": "Dos equipos, dos bases y un mástil con dos banderas. Gana quien logre levantar su bandera y defenderla hasta que termine el tiempo.",
               "link": "",
               "linkText": ""
             },
@@ -299,5 +299,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-07T19:35:48.656Z"
+  "updatedAt": "2026-11-08T00:13:41.063Z"
 }
