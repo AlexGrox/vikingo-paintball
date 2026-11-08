@@ -20,7 +20,7 @@ import { createLinks3D } from './links3d.js';
 import { screenSplat, preloadScreenSplats, floatMessage } from './screen-splats.js';
 
 const PAINT_COLORS = ['#ff3b1f', '#ffd60a', '#27e36b', '#1e90ff', '#ff2d92', '#b45cff', '#ff8a00', '#00e5ff'];
-const BALL_SPEED = 38; // m/s (exagerado a escala de juego)
+const BALL_SPEED = 55; // m/s (antes 38): llega antes al jugador que corre
 const MAX_SPLATS = 90;
 const SPLAT_HOLD = 4; // segundos que la mancha se ve nítida
 const SPLAT_SIZE = 0.5; // tamaño real de la mancha (m): la perspectiva la hace pequeña a lo lejos
