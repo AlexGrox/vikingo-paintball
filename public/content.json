@@ -252,11 +252,74 @@
           "rows": [
             [
               "1",
-              "Tu nombre",
-              "Tu equipo",
+              "Laureano Narvaja",
+              "Los Nazis",
+              "4",
+              "3 hs",
               "0",
+              ""
+            ],
+            [
+              "2",
+              "Josefina Lucero",
+              "Los Nazis",
+              "4",
+              "3 hs",
               "",
-              "0",
+              ""
+            ],
+            [
+              "3",
+              "Santiago Gutierrez ",
+              "Los Nazis",
+              "4",
+              "3 hs",
+              "",
+              ""
+            ],
+            [
+              "4",
+              "Joaquín Gutierrez ",
+              "Los Nazis",
+              "4",
+              "3 hs",
+              "",
+              ""
+            ],
+            [
+              "5",
+              "Santino Santa Marina",
+              "Los Nazis",
+              "4",
+              "",
+              "",
+              ""
+            ],
+            [
+              "6",
+              "Francisco Vidal",
+              "Los Nazis",
+              "4",
+              "",
+              "",
+              ""
+            ],
+            [
+              "7",
+              "Diego Medina",
+              "Los Nazis",
+              "4",
+              "",
+              "",
+              ""
+            ],
+            [
+              "8",
+              "Alejandro Pracasi",
+              "Los Nazis",
+              "4",
+              "",
+              "",
               ""
             ]
           ]
@@ -269,5 +332,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-08T19:47:47.483Z"
+  "updatedAt": "2026-11-09T00:52:31.211Z"
 }
