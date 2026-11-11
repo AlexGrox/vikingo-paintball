@@ -15,7 +15,8 @@
     "mapsQuery": "-31.4857075,-64.2019112",
     "phone": "+54 9 351 763-0322",
     "email": "alejandro@vikingo-paintball.com",
-    "address": "Abdel Taier s/n, barrio Virgen de Fátima, Córdoba Capital"
+    "address": "Abdel Taier s/n, barrio Virgen de Fátima, Córdoba Capital",
+    "gaId": "G-DDTZLSLEWW"
   },
   "order": [
     "reservas",
@@ -332,5 +333,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-09T00:52:31.211Z"
+  "updatedAt": "2026-11-11T14:13:43.080Z"
 }
