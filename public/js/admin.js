@@ -160,6 +160,8 @@ function openSiteSettings() {
     el('div.form-grid', {},
       field('Nombre del sitio', input(draft.site, 'name')),
       field('Texto de ayuda en la portada', input(draft.site, 'hint')),
+      field('Google Analytics: ID de medición', input(draft.site, 'gaId', { placeholder: 'G-XXXXXXXXXX' }), true,
+        'En Analytics: Administrar → Flujos de datos → tu web → «ID de medición».'),
       field('Título para Google (pestaña del navegador)', input(draft.site, 'seoTitle')),
       field('Descripción para Google (SEO)', input(draft.site, 'description', { textarea: true, rows: 2 })),
       field('Bienvenida: título', input(draft.site, 'welcomeTitle')),

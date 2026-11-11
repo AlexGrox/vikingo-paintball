@@ -7,6 +7,7 @@
    ========================================================================== */
 import { el } from './ui.js';
 import { store } from './store.js';
+import { trackEvent } from './analytics.js';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -84,6 +85,7 @@ export function renderGForm(b, ctx, { bindEditable, formDialog, btn }) {
     try {
       await fetch(b.action, { method: 'POST', mode: 'no-cors', body: payload(fields, values) });
       form.reset();
+      trackEvent('generate_lead', { formulario: 'reserva' }); // reserva enviada
       msg.hidden = false;
       msg.className = 'form-msg ok';
       msg.textContent = b.successText || '¡Recibido! Te contactaremos para confirmar tu reserva.';

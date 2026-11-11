@@ -9,6 +9,7 @@ import { isMuted, setMuted } from './audio.js';
 import { mediaUrl } from './media.js';
 import { openLinkWidget } from './widgets.js';
 import { updatePriceData } from './seo.js';
+import { initAnalytics, trackPage, trackEvent } from './analytics.js';
 
 const $ = (s) => document.querySelector(s);
 const home = $('#home');
@@ -24,6 +25,7 @@ const DEFAULT_LOGO = 'img/logo-vikingo.webp';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function applySite() {
+  initAnalytics(store.content.site.gaId); // Google Analytics (ID en Ajustes del sitio)
   updatePriceData(store.content); // precios de las tarjetas → datos para Google
   const { site, order, sections } = store.content;
   hint.textContent = site.hint || '';
@@ -91,6 +93,7 @@ function showPanel(key) {
   panel.classList.add('enter');
   shownKey = key;
   document.title = `${store.content.sections[key].label} · ${store.content.site.name}`;
+  trackPage('/' + key, document.title);
   panel.focus({ preventScroll: true });
 }
 
@@ -123,6 +126,7 @@ async function goHome() {
   }
   document.body.classList.remove('in-section');
   home.inert = false;
+  if (wasInSection) trackPage('/', document.title);
 }
 
 /* ---------- Sonido ---------- */
@@ -196,7 +200,10 @@ async function start() {
           if (location.hash === '#/' + key) route();
           else location.hash = '#/' + key;
         },
-        onLinkHit: (kind) => openLinkWidget(kind),
+        onLinkHit: (kind) => {
+          trackEvent('click_' + kind, { origen: 'escenario_3d' }); // mapa, whatsapp, instagram…
+          openLinkWidget(kind);
+        },
         onFirstShot: () => {
           dismissWelcome();
           setTimeout(() => hint.classList.add('gone'), 400);
@@ -220,6 +227,7 @@ async function start() {
     route();
   }
   window.addEventListener('hashchange', route);
+  if (!shownKey) trackPage('/', document.title); // visita a la portada
 
   loader.classList.add('done');
   setTimeout(() => loader.remove(), 700);
