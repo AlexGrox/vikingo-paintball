@@ -11,7 +11,7 @@
       var path = location.pathname.toLowerCase().replace(/\/+$/, '');
       var map = { reservas: 'reservas', reserva: 'reservas', turnos: 'reservas', contacto: 'reservas',
         juegos: 'juegos', modalidades: 'juegos', precios: 'reservas',
-        tienda: 'tienda', productos: 'tienda', ranking: 'ranking' };
+        tienda: 'tienda', productos: 'tienda', marcadoras: 'tienda', ranking: 'ranking' };
       var key = path.split('/').pop();
       location.replace('/' + (map[key] ? '#/' + map[key] : ''));
     })();
