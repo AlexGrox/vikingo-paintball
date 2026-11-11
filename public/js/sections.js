@@ -15,7 +15,7 @@ export function renderTabs(activeKey) {
   const c = store.content;
   const tabs = document.getElementById('panel-tabs');
   tabs.replaceChildren(
-    ...c.order.map((k) => el('a', { href: '#/' + k, 'aria-current': k === activeKey ? 'page' : null }, c.sections[k].label))
+    ...c.order.map((k) => el('a', { href: `/${k}/`, 'aria-current': k === activeKey ? 'page' : null }, c.sections[k].label))
   );
   document.getElementById('panel-sitename').textContent = c.site.name;
   document.getElementById('panel-logo').src = c.site.logo;

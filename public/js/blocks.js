@@ -70,7 +70,7 @@ export function richEditor(obj, key, changed, { mini = false, placeholder = 'Esc
   // traducir textos del tooltip de enlaces
   const tip = wrap.querySelector('.ql-tooltip');
   if (tip) {
-    tip.querySelector('input[type=text]')?.setAttribute('data-link', 'https://… o #/reservas');
+    tip.querySelector('input[type=text]')?.setAttribute('data-link', 'https://… o /reservas/');
     tip.querySelector('input[type=text]')?.setAttribute('data-video', 'Enlace de YouTube o Vimeo');
   }
   return wrap;
@@ -146,7 +146,7 @@ export const BLOCK_TYPES = {
               fields: [
                 { key: 'alt', label: 'Texto alternativo (accesibilidad y SEO)' },
                 { key: 'width', label: 'Ancho', type: 'select', options: [['normal', 'Normal'], ['wide', 'Ancho'], ['full', 'Pantalla completa']] },
-                { key: 'link', label: 'Enlace al hacer clic (opcional)', placeholder: 'https://… o #/reservas' },
+                { key: 'link', label: 'Enlace al hacer clic (opcional)', placeholder: 'https://… o /reservas/' },
               ],
             });
             if (r) { Object.assign(b, r); ctx.changed(); ctx.rerender(); }
@@ -274,7 +274,7 @@ export const BLOCK_TYPES = {
                 values: it,
                 fields: [
                   { key: 'linkText', label: 'Texto del botón', placeholder: 'Ver más' },
-                  { key: 'link', label: 'Enlace (vacío = sin botón)', placeholder: 'https://…, #/reservas, mailto:…, tel:…' },
+                  { key: 'link', label: 'Enlace (vacío = sin botón)', placeholder: 'https://…, /reservas/, mailto:…, tel:…' },
                 ],
               });
               if (r) { Object.assign(it, r); ctx.changed(); ctx.rerender(); }
@@ -382,7 +382,7 @@ export const BLOCK_TYPES = {
   button: {
     label: 'Botón',
     icon: 'button',
-    create: () => ({ type: 'button', text: '¡Reserva ahora!', url: '#/reservas', style: 'primary', newTab: false }),
+    create: () => ({ type: 'button', text: '¡Reserva ahora!', url: '/reservas/', style: 'primary', newTab: false }),
     render(b, ctx) {
       const ext = /^https?:/.test(b.url || '');
       const a = el('a.btn' + (b.style === 'secondary' ? '.secondary' : ''), {
@@ -396,7 +396,7 @@ export const BLOCK_TYPES = {
             title: 'Botón',
             values: b,
             fields: [
-              { key: 'url', label: 'Enlace', placeholder: 'https://…, #/tienda, https://wa.me/34…, tel:…' },
+              { key: 'url', label: 'Enlace', placeholder: 'https://…, /tienda/, https://wa.me/549…, tel:…' },
               { key: 'style', label: 'Estilo', type: 'select', options: [['primary', 'Relleno'], ['secondary', 'Contorno']] },
               { key: 'newTab', label: 'Abrir en una pestaña nueva', type: 'checkbox' },
             ],

@@ -37,7 +37,7 @@ function applySite() {
   // icono de pestaña: los favicons optimizados del logo oficial, o el logo si se cambia desde la web
   if (site.logo !== DEFAULT_LOGO) $('link[rel=icon]').href = logo;
   if ($('#loader img')) $('#loader img').src = logo;
-  $('#fallback-links').replaceChildren(...order.map((k) => el('li', {}, el('a', { href: '#/' + k }, sections[k].label))));
+  $('#fallback-links').replaceChildren(...order.map((k) => el('li', {}, el('a', { href: `/${k}/` }, sections[k].label))));
   if (!shownKey) document.title = site.seoTitle || site.name;
   renderWelcome(site);
 }
@@ -49,7 +49,7 @@ function renderWelcome(site) {
     const paras = String(site.welcomeText).split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
     $('#welcome-text').replaceChildren(...paras.map((t) => {
       const p = el('p');
-      t.split(/(RESERVAS)/).forEach((part) => p.append(part === 'RESERVAS' ? el('a', { href: '#/reservas' }, part) : part));
+      t.split(/(RESERVAS)/).forEach((part) => p.append(part === 'RESERVAS' ? el('a', { href: '/reservas/' }, part) : part));
       return p;
     }));
   }
@@ -64,15 +64,34 @@ function dismissWelcome() {
 }
 
 /* ---------- Enrutado ---------- */
+/** Sección según la dirección: /juegos/ (actual) o #/juegos (enlaces antiguos) */
+function keyFromUrl() {
+  const h = (location.hash.match(/^#\/([\w-]*)/) || [])[1];
+  if (h !== undefined) return h || null;
+  return location.pathname.replace(/^\/+|\/+$/g, '') || null;
+}
+const urlFor = (key) => (key ? `/${key}/` : '/');
+
+/** Navegar sin recargar: actualiza la barra del navegador y viaja con la cámara */
+function navigate(key) {
+  const target = urlFor(key);
+  if (location.pathname !== target || location.hash) history.pushState(null, '', target);
+  route();
+}
+
 function route() {
-  const key = (location.hash.match(/^#\/([\w-]+)/) || [])[1];
+  const key = keyFromUrl();
   if (key === 'admin') {
-    history.replaceState(null, '', location.pathname + '#/');
+    history.replaceState(null, '', '/');
     goHome();
     openLogin();
     return;
   }
-  if (key && store.content.sections[key]) goToSection(key);
+  const valid = key && store.content.sections[key];
+  // enlaces antiguos (#/juegos) o direcciones desconocidas → dirección limpia
+  const clean = urlFor(valid ? key : null);
+  if (location.pathname !== clean || location.hash) history.replaceState(null, '', clean);
+  if (valid) goToSection(key);
   else goHome();
 }
 
@@ -152,10 +171,6 @@ async function start() {
     console.error(e);
     return;
   }
-  // páginas reales por sección (/reservas/…, generadas para buscadores): se convierten en #/reservas
-  const pathKey = location.pathname.replace(/^\/+|\/+$/g, '');
-  if (!location.hash && store.content.sections[pathKey]) history.replaceState(null, '', '/#/' + pathKey);
-
   // sesión antes de pintar: en la web publicada el administrador carga la última versión del repositorio
   await checkSession();
   applySite();
@@ -190,7 +205,22 @@ async function start() {
     if (e.key !== 'Escape' || !document.body.classList.contains('in-section')) return;
     if (document.querySelector('.modal-backdrop, .lightbox')) return;
     if (e.target.closest && e.target.closest('[contenteditable="true"], .ql-editor, input, textarea, select')) return;
-    location.hash = '#/';
+    navigate(null);
+  });
+
+  // enlaces internos (/juegos/, #/juegos, /) sin recargar la página
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.target === '_blank' || a.closest('.ql-editor')) return;
+    const href = a.getAttribute('href');
+    if (href === '#') { e.preventDefault(); return; }
+    const m = href.match(/^\/?#\/([\w-]*)$/) || href.match(/^\/([\w-]*)\/?$/);
+    if (!m) return;
+    const key = m[1] || null;
+    if (key && !store.content.sections[key] && key !== 'admin') return; // otra página real del sitio
+    e.preventDefault();
+    navigate(key);
   });
 
   // Escena 3D (antes de enrutar, para que la primera sección ya aparezca en su estación)
@@ -200,10 +230,7 @@ async function start() {
         canvas: $('#scene'),
         crosshair: $('#crosshair'),
         content: store.content,
-        onSectionHit: (key) => {
-          if (location.hash === '#/' + key) route();
-          else location.hash = '#/' + key;
-        },
+        onSectionHit: (key) => navigate(key),
         onLinkHit: (kind) => {
           trackEvent('click_' + kind, { origen: 'escenario_3d' }); // mapa, whatsapp, instagram…
           openLinkWidget(kind);
@@ -220,9 +247,10 @@ async function start() {
     home.classList.add('no-webgl');
   }
 
-  // Entrada directa a una sección (#/tienda): colocar la cámara allí sin viaje
-  const initialKey = (location.hash.match(/^#\/([\w-]+)/) || [])[1];
+  // Entrada directa a una sección (/tienda/ o #/tienda): colocar la cámara allí sin viaje
+  const initialKey = keyFromUrl();
   if (scene && initialKey && store.content.sections[initialKey]) {
+    history.replaceState(null, '', urlFor(initialKey));
     document.body.classList.add('in-section');
     home.inert = true;
     await scene.goTo(initialKey, { instant: true });
@@ -230,7 +258,8 @@ async function start() {
   } else {
     route();
   }
-  window.addEventListener('hashchange', route);
+  window.addEventListener('popstate', route); // atrás / adelante del navegador
+  window.addEventListener('hashchange', route); // enlaces antiguos escritos a mano
   if (!shownKey) trackPage('/', document.title); // visita a la portada
 
   loader.classList.add('done');

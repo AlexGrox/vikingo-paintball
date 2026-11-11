@@ -13,7 +13,7 @@
         juegos: 'juegos', modalidades: 'juegos', precios: 'reservas',
         tienda: 'tienda', productos: 'tienda', marcadoras: 'tienda', ranking: 'ranking' };
       var key = path.split('/').pop();
-      location.replace('/' + (map[key] ? '#/' + map[key] : ''));
+      location.replace('/' + (map[key] ? map[key] + '/' : ''));
     })();
   </script>
   <style>body{margin:0;background:#15100b;color:#f3e6c8;font:18px system-ui,sans-serif;display:grid;place-items:center;min-height:100vh}a{color:#e8b13a}</style>

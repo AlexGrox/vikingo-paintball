@@ -76,7 +76,7 @@ for (const key of order) {
   let html = setMeta(base, { title, desc, url });
 
   // todas las rutas relativas (css, js, img, content.json) siguen apuntando a la raíz
-  html = html.replace('<head>', '<head>\n  <base href="/" />');
+  if (!html.includes('<base ')) html = html.replace('<head>', '<head>\n  <base href="/" />');
 
   // un solo h1 por página: el de la sección (la bienvenida pasa a ser un título secundario)
   html = html.replace(/<h1 id="welcome-title">([\s\S]*?)<\/h1>/, '<p id="welcome-title" class="welcome-h">$1</p>');
