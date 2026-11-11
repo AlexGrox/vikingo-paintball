@@ -1421,7 +1421,8 @@ function buildStations({ scene, woodMat, logMat, solid }) {
 /* ==========================================================================
    createScene
    ========================================================================== */
-export async function createScene({ canvas, crosshair, content, onSectionHit, onFirstShot, onLinkHit }) {
+export async function createScene({ canvas, crosshair, content, onSectionHit, onFirstShot, onLinkHit, onShot, onRunnerHit }) {
+  let navLocked = false; // durante el juego del voucher los carteles y enlaces no navegan
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: QUALITY.antialias, powerPreference: 'high-performance' });
   const maxPixelRatio = Math.min(window.devicePixelRatio || 1, QUALITY.pixelRatio);
   let pixelRatio = maxPixelRatio;
@@ -2203,6 +2204,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     if (now - lastShot < 120) return;
     lastShot = now;
     if (shotCount++ === 0 && onFirstShot) onFirstShot();
+    if (onShot) onShot();
 
     const hit = updateAim();
     // ¿el jugador que corre está bajo la mira (y delante de lo demás)?
@@ -2238,7 +2240,8 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       burst(ball.end, toCam, ball.color);
       playSplat(1);
       runner.markHit();
-      floatMessage('¡Le pegaste!');
+      if (onRunnerHit) onRunnerHit(); // el juego del voucher muestra su propio mensaje con el contador
+      else floatMessage('¡Le pegaste!');
       return;
     }
     // volver a trazar al llegar (los carteles se mueven)
@@ -2272,7 +2275,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       const b = boards.find((x) => x.mesh === hit.object);
       if (b) b.swingV += 3.2;
       playWood();
-      if (!navigating) {
+      if (!navigating && !navLocked) {
         navigating = true;
         const p = hit.point.clone().project(camera);
         const rect = canvas.getBoundingClientRect();
@@ -2285,7 +2288,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     } else if (ud.link) {
       links.hit(ud.link);
       playWood();
-      if (onLinkHit) setTimeout(() => onLinkHit(ud.link), 380); // se ve la explosión y luego se abre el widget
+      if (onLinkHit && !navLocked) setTimeout(() => onLinkHit(ud.link), 380); // se ve la explosión y luego se abre el widget
     }
   }
 
@@ -2581,6 +2584,10 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
 
   return {
     refresh,
+    /** Bloquea la navegación por carteles/enlaces (mientras corre el juego del voucher) */
+    setNavLocked(v) {
+      navLocked = !!v;
+    },
     /** Viaja a la estación de una sección. Devuelve true al llegar (false si otro viaje lo interrumpe). */
     goTo(key, { instant = false } = {}) {
       currentStation = key;

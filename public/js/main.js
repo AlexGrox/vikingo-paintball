@@ -10,6 +10,8 @@ import { mediaUrl } from './media.js';
 import { openLinkWidget } from './widgets.js';
 import { updatePriceData } from './seo.js';
 import { initAnalytics, trackPage, trackEvent } from './analytics.js';
+import { initVoucher, refreshVoucher, registerHit } from './voucher.js';
+import { floatMessage } from './screen-splats.js';
 
 const $ = (s) => document.querySelector(s);
 const home = $('#home');
@@ -18,8 +20,10 @@ const hint = $('#hint');
 const welcome = $('#welcome');
 const loader = $('#loader');
 let scene = null;
+let shots = 0, soldierHits = 0, reportedShots = 0, reportedHits = 0; // disparos de esta visita (Analytics)
 let navToken = 0; // invalida navegaciones anteriores si el usuario cambia de destino a mitad de viaje
 let shownKey = null; // sección cuya página está visible
+let navOrigin = null; // cómo se llegó a la sección (para Analytics): disparo, enlace o entrada directa
 
 const DEFAULT_LOGO = 'img/logo-vikingo.webp';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -113,6 +117,8 @@ function showPanel(key) {
   shownKey = key;
   document.title = `${store.content.sections[key].label} · ${store.content.site.name}`;
   trackPage('/' + key, document.title);
+  trackEvent('abrir_seccion', { seccion: key, origen: navOrigin || 'navegador' });
+  navOrigin = null;
   panel.focus({ preventScroll: true });
 }
 
@@ -180,6 +186,7 @@ async function start() {
   initAdmin({
     onAuth: (on) => {
       if (!on) store.editing = false;
+      refreshVoucher();
       if (shownKey) renderSection(shownKey, { keepScroll: true });
     },
     onEditing: (on) => {
@@ -193,6 +200,7 @@ async function start() {
     if (type === 'content' || type === 'labels') {
       applySite();
       scene && scene.refresh(store.content);
+      refreshVoucher();
       if (shownKey) {
         if (type === 'content') renderSection(shownKey, { keepScroll: true });
         else renderTabs(shownKey);
@@ -220,6 +228,7 @@ async function start() {
     const key = m[1] || null;
     if (key && !store.content.sections[key] && key !== 'admin') return; // otra página real del sitio
     e.preventDefault();
+    navOrigin = 'enlace';
     navigate(key);
   });
 
@@ -230,12 +239,22 @@ async function start() {
         canvas: $('#scene'),
         crosshair: $('#crosshair'),
         content: store.content,
-        onSectionHit: (key) => navigate(key),
+        onSectionHit: (key) => {
+          navOrigin = 'disparo';
+          navigate(key);
+        },
         onLinkHit: (kind) => {
           trackEvent('click_' + kind, { origen: 'escenario_3d' }); // mapa, whatsapp, instagram…
           openLinkWidget(kind);
         },
+        onShot: () => shots++,
+        onRunnerHit: () => {
+          soldierHits++;
+          trackEvent('impacto_soldado');
+          if (!registerHit()) floatMessage('¡Le pegaste!'); // durante el juego del voucher muestra el contador
+        },
         onFirstShot: () => {
+          trackEvent('primer_disparo');
           dismissWelcome();
           setTimeout(() => hint.classList.add('gone'), 400);
         },
@@ -254,6 +273,7 @@ async function start() {
     document.body.classList.add('in-section');
     home.inert = true;
     await scene.goTo(initialKey, { instant: true });
+    navOrigin = 'entrada_directa'; // llegó desde Google, un enlace compartido o escribiendo la dirección
     showPanel(initialKey);
   } else {
     route();
@@ -261,6 +281,24 @@ async function start() {
   window.addEventListener('popstate', route); // atrás / adelante del navegador
   window.addEventListener('hashchange', route); // enlaces antiguos escritos a mano
   if (!shownKey) trackPage('/', document.title); // visita a la portada
+
+  // juego «Jugar por un Voucher»
+  initVoucher({
+    getScene: () => scene,
+    navigate,
+    onStart: () => {
+      dismissWelcome();
+      hint.classList.add('gone');
+    },
+  });
+
+  // resumen de disparos de la visita: un solo evento al salir o cambiar de pestaña (no uno por disparo)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden' || shots === reportedShots) return;
+    trackEvent('resumen_disparos', { disparos: shots - reportedShots, aciertos_soldado: soldierHits - reportedHits, transport_type: 'beacon' });
+    reportedShots = shots;
+    reportedHits = soldierHits;
+  });
 
   loader.classList.add('done');
   setTimeout(() => loader.remove(), 700);

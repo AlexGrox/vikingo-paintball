@@ -18,7 +18,9 @@
     "address": "Abdel Taier s/n, barrio Virgen de Fátima, Córdoba Capital",
     "gaId": "G-DDTZLSLEWW",
     "reviewsUrl": "https://search.google.com/local/writereview?placeid=ChIJb465aJOjMpQRCfxnL-nw8I8",
-    "reviewsText": "¿Ya jugaste? Dejanos tu reseña en Google"
+    "reviewsText": "¿Ya jugaste? Dejanos tu reseña en Google",
+    "voucherUrl": "https://script.google.com/macros/s/AKfycbxl1BNctPkW_qXjudG_5soI3YHD1p5sSfDmmf2RGYZTcfqDHKOTIHKKbKlP76TWvxHE/exec",
+    "voucherOn": false
   },
   "order": [
     "reservas",

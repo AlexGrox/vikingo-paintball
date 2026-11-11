@@ -6,6 +6,7 @@ import {
 } from './store.js';
 import { loadQuill } from './blocks.js';
 import { mediaUrl } from './media.js';
+import { VOUCHER_DEFAULTS } from './voucher.js';
 
 let hooks = {};
 
@@ -176,6 +177,18 @@ function openSiteSettings() {
       field('Enlace para dejar reseñas en Google', input(draft.site, 'reviewsUrl', { type: 'url', placeholder: 'https://search.google.com/local/writereview?placeid=…' }), true,
         'Aparece al pie de todas las secciones. Vacío = no se muestra.'),
       field('Texto del enlace de reseñas', input(draft.site, 'reviewsText', { placeholder: '¿Ya jugaste? Dejanos tu reseña en Google' }), true),
+      el('h3.settings-sub.full', {}, '🎯 Juego «Jugar por un Voucher»'),
+      el('label.field.full', { style: { display: 'flex', gap: '10px', alignItems: 'center' } },
+        el('input', { type: 'checkbox', checked: !!draft.site.voucherOn, style: { width: 'auto' }, onchange: (e) => (draft.site.voucherOn = e.target.checked) }),
+        el('span', {}, 'Mostrar el botón del juego en la portada')),
+      field('Dirección del registro de vouchers (Apps Script)', input(draft.site, 'voucherUrl', { type: 'url', placeholder: 'https://script.google.com/macros/s/…/exec' }), true,
+        'Ahí quedan anotados los ganadores con su e-mail y código, y desde ahí se les envía el voucher.'),
+      field('Texto del botón', input(draft.site, 'voucherButton', { placeholder: VOUCHER_DEFAULTS.voucherButton }), true),
+      field('Aciertos al soldado para ganar', input(draft.site, 'voucherHits', { type: 'number', min: 1, max: 20, placeholder: String(VOUCHER_DEFAULTS.voucherHits) }), false),
+      field('Tiempo (segundos)', input(draft.site, 'voucherSeconds', { type: 'number', min: 20, max: 900, placeholder: String(VOUCHER_DEFAULTS.voucherSeconds) }), false),
+      field('Oportunidades por día', input(draft.site, 'voucherTries', { type: 'number', min: 1, max: 10, placeholder: String(VOUCHER_DEFAULTS.voucherTries) }), false,
+        'Si las pierde todas, vuelve a intentarlo al día siguiente. Quien gana espera una semana.'),
+      field('Cartel del premio', input(draft.site, 'voucherWinText', { textarea: true, rows: 3, placeholder: VOUCHER_DEFAULTS.voucherWinText }), true),
       field('Facebook (opcional)', input(draft.site, 'facebook', { placeholder: 'Nombre de la página o enlace' }), false),
       field('TikTok (opcional)', input(draft.site, 'tiktok', { placeholder: '@usuario' }), false),
       field('Ubicación del campo', input(draft.site, 'mapsQuery', { placeholder: 'Dirección o coordenadas, p. ej. -31.4201, -64.1888' }), true,

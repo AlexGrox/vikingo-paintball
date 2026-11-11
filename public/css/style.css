@@ -214,6 +214,42 @@ body.in-section .welcome, #home.no-webgl .welcome { display: none; }
 }
 body.in-section .float-msg { display: none; }
 
+/* ---------------- Juego «Jugar por un Voucher» ---------------- */
+#voucher-btn {
+  position: absolute; left: 50%; top: calc(var(--admin-h) + max(18px, env(safe-area-inset-top))); transform: translateX(-50%);
+  pointer-events: auto; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  padding: 10px 22px 10px 16px; border-radius: 999px; border: 2px solid #5a3a08;
+  background: linear-gradient(#ffd34d, #e8a72a); color: #2a1a06;
+  font-family: var(--font-ui); font-weight: 700; font-size: 19px; letter-spacing: .08em; text-transform: uppercase;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .45), 0 0 0 0 rgba(255, 200, 60, .6);
+  animation: voucher-pulse 2.4s ease-in-out infinite;
+}
+#voucher-btn:hover { filter: brightness(1.08); }
+#voucher-btn:disabled { opacity: .6; cursor: wait; }
+#voucher-btn .vb-icon { font-size: 20px; }
+#voucher-btn[hidden] { display: none; }
+@keyframes voucher-pulse { 50% { box-shadow: 0 6px 22px rgba(0, 0, 0, .45), 0 0 0 10px rgba(255, 200, 60, 0); } }
+#voucher-hud {
+  position: absolute; left: 50%; top: calc(var(--admin-h) + max(18px, env(safe-area-inset-top))); transform: translateX(-50%);
+  display: flex; gap: 10px; pointer-events: none;
+  font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 34px); line-height: 1; color: #fff6df;
+}
+#voucher-hud[hidden] { display: none; }
+#voucher-hud span {
+  padding: 8px 16px; border-radius: 12px; background: rgba(15, 10, 6, .66); border: 1px solid var(--line-strong);
+  backdrop-filter: blur(4px); text-shadow: 0 2px 6px rgba(0, 0, 0, .6); font-variant-numeric: tabular-nums;
+}
+#voucher-hud .vh-time.urgent { color: #ff7a5a; border-color: #ff7a5a; animation: hint-pulse .8s ease-in-out infinite; }
+body.in-section #voucher-btn, body.in-section #voucher-hud { display: none; }
+.voucher-intro p { margin: 0 0 .8em; font-size: 17px; line-height: 1.5; }
+.voucher-prize { font-size: 19px; line-height: 1.5; margin: 0 0 18px; color: #fff6df; }
+.voucher-form .form-grid, .voucher-form .field { margin-bottom: 6px; }
+.voucher-err { color: var(--danger); min-height: 1.3em; margin: 4px 0 6px; font-size: 15px; }
+.voucher-code { font-family: var(--font-ui); font-size: 26px; letter-spacing: .12em; color: var(--accent); }
+@media (max-width: 760px) {
+  #voucher-btn { font-size: 16px; padding: 9px 18px 9px 13px; }
+}
+
 /* ---------------- Bolas que revientan en la pantalla ---------------- */
 #screen-splats { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .screen-splat { position: absolute; transform: translate(-50%, -50%) rotate(var(--r, 0deg)); }
@@ -610,3 +646,5 @@ table.data.editing-table td:focus, table.data.editing-table th:focus { outline: 
   .screen-splat canvas { filter: none; }
   .welcome { background: rgba(15, 10, 6, 0.72); }
 }
+.form-grid .settings-sub { margin: 10px 0 -4px; padding-top: 14px; border-top: 1px solid var(--line); font-family: var(--font-ui); font-size: 18px; letter-spacing: .06em; color: var(--accent); }
+.form-grid input[type="checkbox"], .toggle input[type="checkbox"] { accent-color: var(--accent); }
