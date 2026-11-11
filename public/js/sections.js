@@ -72,7 +72,21 @@ export function renderSection(key, { keepScroll = false } = {}) {
             rerender();
           }
         },
-      }, `Cartel: ${sec.label}`)
+      }, `Cartel: ${sec.label}`),
+      el('button.btn.small.ghost', {
+        type: 'button',
+        onclick: async () => {
+          const r = await formDialog({
+            title: 'Cómo aparece esta sección en Google',
+            values: sec,
+            fields: [
+              { key: 'seoTitle', label: 'Título en Google (hasta ~60 caracteres)' },
+              { key: 'seoDescription', label: 'Descripción en Google (hasta ~155 caracteres)', type: 'textarea', rows: 3 },
+            ],
+          });
+          if (r) { Object.assign(sec, r); changed(); }
+        },
+      }, 'Google')
     ));
   } else if (!sec.subtitle) sub.remove();
 

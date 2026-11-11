@@ -408,6 +408,39 @@ export const BLOCK_TYPES = {
     },
   },
 
+  faq: {
+    label: 'Preguntas frecuentes',
+    icon: 'text',
+    create: () => ({ type: 'faq', title: 'Preguntas frecuentes', items: [{ q: 'Pregunta', a: 'Respuesta' }] }),
+    render(b, ctx) {
+      const wrap = el('div.faq');
+      const title = el('h2', {}, b.title || '');
+      if (ctx.editing) bindEditable(title, b, 'title', ctx.changed, { placeholder: 'Título (opcional)' });
+      if (b.title || ctx.editing) wrap.append(title);
+      b.items.forEach((it, i) => {
+        if (!ctx.editing) {
+          wrap.append(el('details.faq-item', {}, el('summary', {}, it.q || ''), el('p.faq-a', {}, it.a || '')));
+          return;
+        }
+        const q = el('strong.faq-q', {}, it.q || '');
+        const a = el('p.faq-a', {}, it.a || '');
+        bindEditable(q, it, 'q', ctx.changed, { placeholder: 'Pregunta' });
+        bindEditable(a, it, 'a', ctx.changed, { multiline: true, placeholder: 'Respuesta' });
+        wrap.append(el('div.faq-item.faq-edit', {},
+          el('div.faq-tools', {},
+            iconBtn('up', 'Subir', () => move(b.items, i, -1) && (ctx.changed(), ctx.rerender())),
+            iconBtn('down', 'Bajar', () => move(b.items, i, 1) && (ctx.changed(), ctx.rerender())),
+            iconBtn('trash', 'Eliminar pregunta', () => { b.items.splice(i, 1); ctx.changed(); ctx.rerender(); }, 'danger')),
+          q, a));
+      });
+      if (ctx.editing) {
+        wrap.append(el('div.edit-row', {}, btn('+ Pregunta', () => { b.items.push({ q: '', a: '' }); ctx.changed(); ctx.rerender(); }),
+          el('small', { style: { color: 'var(--muted)' } }, 'Google puede mostrar estas preguntas y respuestas en los resultados de búsqueda.')));
+      }
+      return wrap;
+    },
+  },
+
   gform: {
     label: 'Formulario de Google',
     icon: 'form',

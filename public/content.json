@@ -151,8 +151,57 @@
               ]
             }
           ]
+        },
+        {
+          "id": "faqreservas01",
+          "type": "faq",
+          "title": "Preguntas frecuentes",
+          "items": [
+            {
+              "q": "¿Cuánto cuesta jugar al paintball en Vikingo Paintball?",
+              "a": "El precio por jugador incluye marcadora, máscara, garrafa y 200 bolitas. Los valores actualizados de la promoción, el chaleco y la promoción de cumpleaños están en las tarjetas de esta sección. Podés recargar bolitas en cualquier momento."
+            },
+            {
+              "q": "¿Desde qué edad se puede jugar?",
+              "a": "Desde los 12 años. Los menores de edad necesitan la autorización de un adulto responsable."
+            },
+            {
+              "q": "¿Cuántos jugadores se necesitan para reservar?",
+              "a": "Las reservas son para grupos de al menos 10 jugadores."
+            },
+            {
+              "q": "¿Cuánto dura una partida?",
+              "a": "Con las 200 bolitas iniciales se juega aproximadamente 1 hora, y podés recargar bolitas para seguir jugando."
+            },
+            {
+              "q": "¿Qué horarios tienen?",
+              "a": "Hay turnos de 9 a 13 hs y de 15 a 19 hs. Elegí tu horario en el formulario de reserva."
+            },
+            {
+              "q": "¿Qué ropa conviene llevar?",
+              "a": "Ropa cómoda de manga larga que se pueda manchar y calzado deportivo cerrado. La máscara de protección la provee el campo."
+            },
+            {
+              "q": "¿Duele el impacto de las bolitas?",
+              "a": "Se siente un golpe seco que puede dejar una marca leve. La distancia mínima de disparo es de 5 metros y podés alquilar el chaleco balístico para reducir el impacto."
+            },
+            {
+              "q": "¿Hacen cumpleaños?",
+              "a": "Sí. En la promoción de cumpleaños el cumpleañero recibe 100 disparos extra y el predio queda a disposición del grupo, con estacionamiento, baño, cabaña para guardar pertenencias, tablones, banquitos y asador."
+            },
+            {
+              "q": "¿Dónde queda el campo?",
+              "a": "En Abdel Taier s/n, barrio Virgen de Fátima, en la zona sur de Córdoba Capital. El enlace «Cómo llegar» del pie de página abre la ubicación en Google Maps."
+            },
+            {
+              "q": "¿Cómo reservo?",
+              "a": "Completá el formulario de esta sección o escribinos por WhatsApp al 351 763-0322 y te confirmamos el turno."
+            }
+          ]
         }
-      ]
+      ],
+      "seoTitle": "Reservas de paintball en Córdoba | Vikingo Paintball",
+      "seoDescription": "Reservá tu partida de paintball en la zona sur de Córdoba Capital. Precio promoción con marcadora, máscara y bolitas incluidas. Grupos y cumpleaños."
     },
     "juegos": {
       "label": "JUEGOS",
@@ -195,7 +244,9 @@
           "type": "text",
           "html": "<h2>Normas básicas</h2><ul><li>La máscara no se quita nunca dentro del campo.</li><li>Impacto que rompe y mancha = eliminado.</li><li>Distancia mínima de disparo: 5 metros.</li><li>Respeta al árbitro y a los demás jugadores.</li></ul>"
         }
-      ]
+      ],
+      "seoTitle": "Modos de juego de paintball en Córdoba | Vikingo Paintball",
+      "seoDescription": "Captura la bandera, asalto al fuerte y misiones tácticas en un campo de paintball con escenarios en la zona sur de Córdoba Capital."
     },
     "tienda": {
       "label": "TIENDA",
@@ -230,7 +281,9 @@
           "type": "text",
           "html": "<p>Los productos se recogen en el campo. Pregúntanos por disponibilidad antes de tu partida.</p>"
         }
-      ]
+      ],
+      "seoTitle": "Recarga de bolitas de paintball en Córdoba | Vikingo Paintball",
+      "seoDescription": "Recargas de bolitas de paintball calibre .68 para jugadores de Vikingo Paintball, en la zona sur de Córdoba Capital."
     },
     "ranking": {
       "label": "RANKING",
@@ -330,7 +383,9 @@
           "type": "text",
           "html": "<p><em>El ranking se actualiza después de cada jornada.</em></p>"
         }
-      ]
+      ],
+      "seoTitle": "Ranking de jugadores de paintball | Vikingo Paintball Córdoba",
+      "seoDescription": "Clasificación de jugadores y equipos de Vikingo Paintball Córdoba: partidas, tiempo jugado, torneos y victorias."
     }
   },
   "updatedAt": "2026-11-11T14:13:43.080Z"

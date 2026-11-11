@@ -152,6 +152,10 @@ async function start() {
     console.error(e);
     return;
   }
+  // páginas reales por sección (/reservas/…, generadas para buscadores): se convierten en #/reservas
+  const pathKey = location.pathname.replace(/^\/+|\/+$/g, '');
+  if (!location.hash && store.content.sections[pathKey]) history.replaceState(null, '', '/#/' + pathKey);
+
   // sesión antes de pintar: en la web publicada el administrador carga la última versión del repositorio
   await checkSession();
   applySite();
