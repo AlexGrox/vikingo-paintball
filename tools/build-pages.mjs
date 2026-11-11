@@ -82,7 +82,7 @@ for (const key of order) {
   html = html.replace(/<h1 id="welcome-title">([\s\S]*?)<\/h1>/, '<p id="welcome-title" class="welcome-h">$1</p>');
 
   // contenido de la sección ya escrito dentro del panel
-  const body = `<div class="panel-inner"><header class="hero"><h1>${esc(sec.title)}</h1>${sec.subtitle ? `<p class="subtitle">${esc(sec.subtitle)}</p>` : ''}</header><div class="content">${(sec.blocks || []).map((b) => `<section class="block block-${b.type}">${renderBlock(b)}</section>`).join('')}</div><footer class="site-footer"><div class="rich">${site.footerHtml || ''}</div></footer></div>`;
+  const body = `<div class="panel-inner"><header class="hero"><h1>${esc(sec.title)}</h1>${sec.subtitle ? `<p class="subtitle">${esc(sec.subtitle)}</p>` : ''}</header><div class="content">${(sec.blocks || []).map((b) => `<section class="block block-${b.type}">${renderBlock(b)}</section>`).join('')}</div><footer class="site-footer"><div class="rich">${site.footerHtml || ''}</div>${site.reviewsUrl ? `<p class="review-link"><a href="${esc(site.reviewsUrl)}" rel="noopener">★★★★★ ${esc(site.reviewsText || '¿Ya jugaste? Dejanos tu reseña en Google')}</a></p>` : ''}</footer></div>`;
   html = html.replace('<section id="panel" hidden aria-live="polite">', '<section id="panel" aria-live="polite">');
   html = html.replace('<div id="panel-body"></div>', `<div id="panel-body">${body}</div>`);
   html = html.replace('<ul id="fallback-links"></ul>', `<ul id="fallback-links">${linksHtml}</ul>`);

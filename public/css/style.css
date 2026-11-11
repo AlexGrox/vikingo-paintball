@@ -325,6 +325,14 @@ body.in-section #home, body.in-section #scene { cursor: default; }
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
 .site-footer p { margin: 0.3em 0; }
+.review-link { margin: 12px 0 2px; }
+.review-link a {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; text-decoration: none;
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: .04em; font-size: 16px;
+  color: var(--accent-ink); background: var(--accent); transition: filter .15s, transform .15s;
+}
+.review-link a:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.review-link .stars { letter-spacing: 1px; color: #7a3d00; }
 
 /* ---------- Bloques: texto enriquecido ---------- */
 .rich { font-size: 18px; }

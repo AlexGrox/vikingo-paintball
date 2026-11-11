@@ -3,6 +3,7 @@ import { el, icon, iconBtn, bindEditable, confirmDialog, formDialog, pickFile, t
 import { store, markDirty, uploadFile, emit } from './store.js';
 import { BLOCK_TYPES, createBlock, richEditor } from './blocks.js';
 import { mediaUrl } from './media.js';
+import { trackEvent } from './analytics.js';
 
 const body = () => document.getElementById('panel-body');
 let currentKey = null;
@@ -130,6 +131,13 @@ export function renderSection(key, { keepScroll = false } = {}) {
   const footer = el('footer.site-footer');
   if (editing) footer.append(richEditor(c.site, 'footerHtml', changed, { mini: true, placeholder: 'Pie de página: dirección, teléfono, redes…' }));
   else footer.append(el('div.rich', { html: c.site.footerHtml || '' }));
+  // enlace para dejar una reseña en Google (Ajustes del sitio)
+  if (c.site.reviewsUrl) {
+    footer.append(el('p.review-link', {}, el('a', {
+      href: c.site.reviewsUrl, target: '_blank', rel: 'noopener',
+      onclick: () => trackEvent('click_review', { origen: 'pie' }),
+    }, el('span.stars', { 'aria-hidden': 'true' }, '★★★★★'), ' ', c.site.reviewsText || '¿Ya jugaste? Dejanos tu reseña en Google')));
+  }
 
   body().replaceChildren(el('div.panel-inner', {}, hero, content, footer));
   panel.scrollTop = keepScroll ? scroll : 0;
