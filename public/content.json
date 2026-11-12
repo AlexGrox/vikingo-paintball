@@ -19,10 +19,11 @@
     "gaId": "G-DDTZLSLEWW",
     "reviewsUrl": "https://search.google.com/local/writereview?placeid=ChIJb465aJOjMpQRCfxnL-nw8I8",
     "reviewsText": "¿Ya jugaste? Dejanos tu reseña en Google",
-    "voucherUrl": "https://script.google.com/macros/s/AKfycbwOAqOSfP92PDdCT6YDvjUglejEvMvfmhpZmpsVE4zIUw9EtLfZ4p_ZwsS5S8fGmM6V/exec",
+    "voucherUrl": "https://script.google.com/macros/s/AKfycbzBWSUSKRp4X0Wl4zKgso-DEG_YIve6g3Vr8Xcv35xxQWof63aB-y3bUWxNzm07Ltf4/exec",
     "voucherOn": true,
     "voucherButton": "Juga por 100 disparos gratis",
-    "voucherWinText": "¡Felicidades! te ganaste un voucher de 100 disparos para jugar en Vikingo Paintball, el día que juegues solo dinos tu código y te regalaremos 100 disparos extra. Vuelve la semana que viene para intentar jugar de nuevo por otro voucher."
+    "voucherWinText": "¡Felicidades! te ganaste un voucher de 100 disparos para jugar en Vikingo Paintball, el día que juegues solo dinos tu código y te regalaremos 100 disparos extra. Vuelve la semana que viene para intentar jugar de nuevo por otro voucher.",
+    "dataFiscalUrl": ""
   },
   "order": [
     "reservas",
@@ -443,5 +444,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-12T00:30:46.507Z"
+  "updatedAt": "2026-11-12T14:18:27.756Z"
 }
