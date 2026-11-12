@@ -4,6 +4,7 @@ import { store, markDirty, uploadFile, emit } from './store.js';
 import { BLOCK_TYPES, createBlock, richEditor } from './blocks.js';
 import { mediaUrl } from './media.js';
 import { trackEvent } from './analytics.js';
+import { legalFooter, isPageOnly } from './legal.js';
 
 const body = () => document.getElementById('panel-body');
 let currentKey = null;
@@ -62,7 +63,7 @@ export function renderSection(key, { keepScroll = false } = {}) {
         },
       }, sec.cover ? 'Cambiar fondo' : 'Imagen de fondo'),
       sec.cover ? el('button.btn.small.ghost', { type: 'button', onclick: () => { sec.cover = ''; changed(); rerender(); } }, 'Quitar fondo') : null,
-      el('button.btn.small.ghost', {
+      isPageOnly(key) ? null : el('button.btn.small.ghost', {
         type: 'button',
         onclick: async () => {
           const r = await formDialog({ title: 'Nombre en el cartel 3D y en el menú', fields: [{ key: 'label', label: 'Texto del cartel' }], values: sec });
@@ -138,6 +139,8 @@ export function renderSection(key, { keepScroll = false } = {}) {
       onclick: () => trackEvent('click_review', { origen: 'pie' }),
     }, el('span.stars', { 'aria-hidden': 'true' }, '★★★★★'), ' ', c.site.reviewsText || '¿Ya jugaste? Dejanos tu reseña en Google')));
   }
+  // privacidad, bases del voucher, arrepentimiento, reclamos y Data Fiscal
+  footer.append(legalFooter());
 
   body().replaceChildren(el('div.panel-inner', {}, hero, content, footer));
   panel.scrollTop = keepScroll ? scroll : 0;

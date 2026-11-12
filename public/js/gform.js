@@ -67,6 +67,7 @@ export function renderGForm(b, ctx, { bindEditable, formDialog, btn }) {
   const form = el('form.gf-form', { novalidate: false },
     el('div.form-grid', {}, ctrls.map((c) => c.node)),
     el('div.gf-actions', {}, submit),
+    el('p.form-note', {}, 'Usamos tus datos solo para gestionar tu reserva. ', el('a', { href: '/privacidad/' }, 'Política de privacidad'), '.'),
     msg);
 
   form.addEventListener('submit', async (e) => {

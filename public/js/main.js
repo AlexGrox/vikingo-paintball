@@ -12,6 +12,7 @@ import { updatePriceData } from './seo.js';
 import { initAnalytics, trackPage, trackEvent } from './analytics.js';
 import { initVoucher, refreshVoucher, registerHit } from './voucher.js';
 import { floatMessage } from './screen-splats.js';
+import { isPageOnly, renderHomeLegal } from './legal.js';
 
 const $ = (s) => document.querySelector(s);
 const home = $('#home');
@@ -24,6 +25,7 @@ let shots = 0, soldierHits = 0, reportedShots = 0, reportedHits = 0; // disparos
 let navToken = 0; // invalida navegaciones anteriores si el usuario cambia de destino a mitad de viaje
 let shownKey = null; // sección cuya página está visible
 let navOrigin = null; // cómo se llegó a la sección (para Analytics): disparo, enlace o entrada directa
+let cameraAway = false; // la cámara está en la estación de una sección (no en la portada)
 
 const DEFAULT_LOGO = 'img/logo-vikingo.webp';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -44,6 +46,7 @@ function applySite() {
   $('#fallback-links').replaceChildren(...order.map((k) => el('li', {}, el('a', { href: `/${k}/` }, sections[k].label))));
   if (!shownKey) document.title = site.seoTitle || site.name;
   renderWelcome(site);
+  renderHomeLegal(); // privacidad, arrepentimiento, reclamos y Data Fiscal en la portada
 }
 
 /** Recuadro de bienvenida (texto para buscadores). «RESERVAS» enlaza a la sección. */
@@ -132,8 +135,12 @@ async function goToSection(key) {
     shownKey = null;
     await hidePanel();
     if (my !== navToken) return;
-    const arrived = await scene.goTo(key);
-    if (!arrived || my !== navToken) return;
+    // páginas sin cartel (privacidad, bases…): se abren donde esté la cámara
+    if (!isPageOnly(key)) {
+      cameraAway = true;
+      const arrived = await scene.goTo(key);
+      if (!arrived || my !== navToken) return;
+    }
   }
   showPanel(key);
 }
@@ -145,9 +152,10 @@ async function goHome() {
   document.title = store.content.site.seoTitle || store.content.site.name;
   await hidePanel();
   if (my !== navToken) return;
-  if (scene && wasInSection) {
+  if (scene && wasInSection && cameraAway) {
     const arrived = await scene.goHome();
     if (!arrived || my !== navToken) return;
+    cameraAway = false;
   }
   document.body.classList.remove('in-section');
   home.inert = false;
@@ -272,7 +280,10 @@ async function start() {
     history.replaceState(null, '', urlFor(initialKey));
     document.body.classList.add('in-section');
     home.inert = true;
-    await scene.goTo(initialKey, { instant: true });
+    if (!isPageOnly(initialKey)) {
+      cameraAway = true;
+      await scene.goTo(initialKey, { instant: true });
+    }
     navOrigin = 'entrada_directa'; // llegó desde Google, un enlace compartido o escribiendo la dirección
     showPanel(initialKey);
   } else {

@@ -7,6 +7,7 @@ import {
 import { loadQuill } from './blocks.js';
 import { mediaUrl } from './media.js';
 import { VOUCHER_DEFAULTS } from './voucher.js';
+import { parseDataFiscal, CONSUMER_URL } from './legal.js';
 
 let hooks = {};
 
@@ -137,6 +138,9 @@ function openSiteSettings() {
   };
   const field = (label, node, full = true, help) =>
     el('label.field' + (full ? '.full' : ''), {}, el('span', {}, label), node, help ? el('small.help', {}, help) : null);
+  // Data Fiscal: se pega el código de ARCA tal cual; se guarda solo el enlace
+  const dataFiscal = el('textarea', { rows: 3, spellcheck: false, placeholder: '<a href="http://qr.afip.gob.ar/?qr=…" target="_F960AFIPInfo"><img src="…DATAWEB.jpg" …></a>' });
+  dataFiscal.value = draft.site.dataFiscalUrl || '';
 
   const body = el('div', {},
     el('div', { style: { display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '18px' } },
@@ -182,13 +186,22 @@ function openSiteSettings() {
         el('input', { type: 'checkbox', checked: !!draft.site.voucherOn, style: { width: 'auto' }, onchange: (e) => (draft.site.voucherOn = e.target.checked) }),
         el('span', {}, 'Mostrar el botón del juego en la portada')),
       field('Dirección del registro de vouchers (Apps Script)', input(draft.site, 'voucherUrl', { type: 'url', placeholder: 'https://script.google.com/macros/s/…/exec' }), true,
-        'Ahí quedan anotados los ganadores con su e-mail y código, y desde ahí se les envía el voucher.'),
+        'Ahí quedan anotados los ganadores con su e-mail y código, y desde ahí se les envía el voucher. También recibe las solicitudes del botón de arrepentimiento.'),
       field('Texto del botón', input(draft.site, 'voucherButton', { placeholder: VOUCHER_DEFAULTS.voucherButton }), true),
       field('Aciertos al soldado para ganar', input(draft.site, 'voucherHits', { type: 'number', min: 1, max: 20, placeholder: String(VOUCHER_DEFAULTS.voucherHits) }), false),
       field('Tiempo (segundos)', input(draft.site, 'voucherSeconds', { type: 'number', min: 20, max: 900, placeholder: String(VOUCHER_DEFAULTS.voucherSeconds) }), false),
       field('Oportunidades por día', input(draft.site, 'voucherTries', { type: 'number', min: 1, max: 10, placeholder: String(VOUCHER_DEFAULTS.voucherTries) }), false,
         'Si las pierde todas, vuelve a intentarlo al día siguiente. Quien gana espera una semana.'),
-      field('Cartel del premio', input(draft.site, 'voucherWinText', { textarea: true, rows: 3, placeholder: VOUCHER_DEFAULTS.voucherWinText }), true),
+      field('Cartel del premio', input(draft.site, 'voucherWinText', { textarea: true, rows: 3, placeholder: VOUCHER_DEFAULTS.voucherWinText }), true,
+        'Si cambiás las reglas del juego, actualizá también la página «Bases del voucher» (/bases-voucher/).'),
+      el('h3.settings-sub.full', {}, '⚖️ Datos legales'),
+      field('Titular (nombre y apellido o razón social)', input(draft.site, 'legalName', { placeholder: 'Como figura en ARCA' }), false),
+      field('CUIT', input(draft.site, 'cuit', { placeholder: '20-12345678-9', inputmode: 'numeric' }), false,
+        'Se muestran al pie de las secciones. Vacíos = no se muestran.'),
+      field('Data Fiscal (Formulario 960/D de ARCA)', dataFiscal, true,
+        'En ARCA, con tu clave fiscal: servicio «Formulario 960/D – Data Fiscal» → tu CUIT → copiá el código para la página web y pegalo acá (o solo el enlace qr.afip.gob.ar). El logo aparece en la portada y al pie de las secciones. Vacío = no se muestra.'),
+      field('Enlace de reclamos de Defensa del Consumidor', input(draft.site, 'consumerUrl', { type: 'url', placeholder: CONSUMER_URL }), true,
+        'Vacío = el formulario oficial de reclamos de argentina.gob.ar.'),
       field('Facebook (opcional)', input(draft.site, 'facebook', { placeholder: 'Nombre de la página o enlace' }), false),
       field('TikTok (opcional)', input(draft.site, 'tiktok', { placeholder: '@usuario' }), false),
       field('Ubicación del campo', input(draft.site, 'mapsQuery', { placeholder: 'Dirección o coordenadas, p. ej. -31.4201, -64.1888' }), true,
@@ -207,6 +220,13 @@ function openSiteSettings() {
       {
         label: 'Aplicar',
         onClick: (cl) => {
+          const df = parseDataFiscal(dataFiscal.value);
+          if (df === null) {
+            toast('No reconozco el código de Data Fiscal. Pegá el código completo que te da ARCA o el enlace que empieza con http://qr.afip.gob.ar/', 'err', 7000);
+            dataFiscal.focus();
+            return;
+          }
+          draft.site.dataFiscalUrl = df;
           Object.assign(c.site, draft.site);
           for (const k of c.order) if (draft.labels[k]?.trim()) c.sections[k].label = draft.labels[k].trim().toUpperCase();
           markDirty();

@@ -275,7 +275,7 @@
             {
               "img": "uploads/1794076764821-apdzhm-500-bolitas.png",
               "title": "500 bolitas de recarga",
-              "tag": "$40,000",
+              "tag": "$40.000",
               "text": "Estos precios son solo para jugadores que ya hayan alquilado su marcadora. 500 Bolitas de calibre .68 de alta calidad, aptas para todo tipo de marcadoras.",
               "link": "",
               "linkText": "Consultar"
@@ -392,6 +392,55 @@
       ],
       "seoTitle": "Ranking de jugadores de paintball | Vikingo Paintball Córdoba",
       "seoDescription": "Clasificación de jugadores y equipos de Vikingo Paintball Córdoba: partidas, tiempo jugado, torneos y victorias."
+    },
+    "privacidad": {
+      "label": "Privacidad",
+      "title": "Política de privacidad",
+      "subtitle": "Qué datos usamos, para qué y cómo podés pedir que los corrijamos o borremos.",
+      "seoTitle": "Política de privacidad | Vikingo Paintball Córdoba",
+      "seoDescription": "Cómo usa Vikingo Paintball Córdoba los datos de reservas, del juego del voucher y las estadísticas de la web.",
+      "blocks": [
+        {
+          "id": "legalpriv01",
+          "type": "text",
+          "html": "<h2>Quién es el responsable</h2><p>Vikingo Paintball Córdoba, Abdel Taier s/n, barrio Virgen de Fátima, Córdoba Capital, Argentina. Contacto: <a href=\"mailto:alejandro@vikingo-paintball.com\">alejandro@vikingo-paintball.com</a> · <a href=\"https://wa.me/5493517630322\" target=\"_blank\" rel=\"noopener\">WhatsApp 351 763-0322</a>.</p><h2>Qué datos juntamos y para qué</h2><ul><li><strong>Reservas:</strong> nombre, apellido, teléfono, día y horario elegidos y las respuestas del formulario. Los usamos solo para confirmar y organizar tu reserva.</li><li><strong>Juego «Jugar por un Voucher»:</strong> si ganás, tu e-mail, el código del voucher, la fecha, los aciertos, el tiempo de juego, el tipo de dispositivo (móvil o PC) y un identificador aleatorio del dispositivo. Los usamos para enviarte el voucher, validarlo cuando vengas y aplicar las reglas del juego (por ejemplo, un premio por persona por semana).</li><li><strong>Botón de arrepentimiento:</strong> nombre, e-mail, teléfono y el detalle de lo que querés cancelar, para tramitar tu pedido y enviarte el código de la solicitud.</li><li><strong>WhatsApp, teléfono o e-mail:</strong> los datos que nos mandes, solo para responderte.</li></ul><p>Solo te escribimos por temas de tu reserva, tu voucher o tu solicitud. No vendemos ni cedemos tus datos a terceros.</p><h2>Cookies y estadísticas</h2><p>Usamos Google Analytics para saber cuántas personas visitan la web, qué secciones miran y cómo usan el juego (por ejemplo, cuántos disparos y aciertos hay). Google Analytics usa cookies y datos técnicos del navegador, como el tipo de dispositivo, la ciudad aproximada y las páginas visitadas. Nunca le enviamos tu nombre, teléfono ni e-mail.</p><p>Podés bloquear o borrar las cookies desde la configuración de tu navegador, o instalar el <a href=\"https://tools.google.com/dlpage/gaoptout?hl=es\" target=\"_blank\" rel=\"noopener\">complemento de inhabilitación de Google Analytics</a>. La web sigue funcionando igual.</p><p>Además, la web guarda en tu propio navegador (almacenamiento local) cuántas oportunidades del juego usaste y si ganaste un voucher, para aplicar las reglas del juego. Esos datos quedan en tu dispositivo.</p><h2>Dónde se guardan</h2><p>Usamos servicios de Google (Formularios, Hojas de cálculo, Gmail y Analytics) para guardar y procesar estos datos, y servicios de alojamiento para publicar la web. Estos proveedores pueden guardar la información en servidores fuera de Argentina.</p><p>Guardamos los datos solo el tiempo necesario para gestionar tu reserva, tu voucher o tu solicitud, y para cumplir obligaciones legales.</p><h2>Tus derechos</h2><p>Podés pedirnos en cualquier momento ver, corregir, actualizar o borrar tus datos escribiendo a <a href=\"mailto:alejandro@vikingo-paintball.com\">alejandro@vikingo-paintball.com</a> o por <a href=\"https://wa.me/5493517630322\" target=\"_blank\" rel=\"noopener\">WhatsApp 351 763-0322</a>. Te respondemos dentro de los plazos de la Ley 25.326 de Protección de los Datos Personales: 10 días corridos para el acceso y 5 días hábiles para la corrección o supresión.</p><p>El titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido en el artículo 14, inciso 3 de la Ley N° 25.326.</p><p>La AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales.</p><h2>Menores de edad</h2><p>Si tenés menos de 18 años, pedile a tu madre, padre o adulto responsable que haga la reserva o que te autorice antes de dejarnos tus datos.</p><h2>Cambios</h2><p>Si cambiamos esta política, lo publicamos en esta página. Última actualización: 12 de noviembre de 2026.</p>"
+        }
+      ]
+    },
+    "bases-voucher": {
+      "label": "Bases del voucher",
+      "title": "Bases y condiciones del juego «Jugar por un Voucher»",
+      "subtitle": "Participar es gratis y no requiere ninguna compra.",
+      "seoTitle": "Bases y condiciones del voucher | Vikingo Paintball Córdoba",
+      "seoDescription": "Reglas del juego «Jugar por un Voucher» de Vikingo Paintball Córdoba: cómo se juega, el premio, la validez y los límites.",
+      "blocks": [
+        {
+          "id": "legalbases01",
+          "type": "text",
+          "html": "<h2>1. Organizador</h2><p>Vikingo Paintball Córdoba (en adelante, «el organizador»), Abdel Taier s/n, barrio Virgen de Fátima, Córdoba Capital, Argentina.</p><h2>2. Vigencia</h2><p>El juego está disponible desde el 11 de noviembre de 2026 y hasta que el organizador lo dé por terminado, lo que se informará en esta página. Los vouchers ya ganados mantienen su validez.</p><h2>3. Quiénes pueden participar</h2><p>Personas mayores de 18 años, y menores desde 12 años con autorización de su madre, padre o adulto responsable. La participación es gratuita y no requiere comprar nada.</p><h2>4. Cómo se juega</h2><ul><li>Se juega en vikingo-paintball.com con el botón «Jugar por un Voucher».</li><li>Al empezar corre una cuenta regresiva de 3 minutos. Para ganar hay que pegarle 3 veces al soldado que cruza corriendo por el campo antes de que el tiempo llegue a cero.</li><li>Cada dispositivo tiene 3 oportunidades por día. Si se usan todas sin ganar, se puede volver a intentar al día siguiente.</li><li>Es un juego de habilidad: el resultado depende de la puntería del jugador, no de un sorteo.</li></ul><h2>5. Premio</h2><p>Un voucher por 100 disparos (100 bolitas de pintura) para usar en una partida en Vikingo Paintball Córdoba.</p><ul><li>Vale por 30 días corridos desde que se gana. La fecha de vencimiento figura en el e-mail del voucher.</li><li>Es para una persona y para un solo uso. Hay que presentar el código el día de la partida.</li><li>No se puede cambiar por dinero ni por otros productos o servicios.</li><li>Se usa en una partida reservada, sujeta a la disponibilidad de turnos y a las condiciones habituales de reserva. El voucher no incluye la entrada ni el alquiler del equipo.</li></ul><h2>6. Cómo se entrega</h2><p>Al ganar, el jugador deja su e-mail y recibe el voucher con su código. El código también se muestra en pantalla. Si no llega, conviene revisar la carpeta de correo no deseado o escribirnos.</p><h2>7. Límites</h2><ul><li>Un voucher por persona, e-mail y dispositivo cada 7 días.</li><li>Hasta 30 vouchers por día en total. Cuando se alcanza ese número, el juego lo informa y se puede volver a intentar al día siguiente.</li></ul><h2>8. Juego limpio</h2><p>El organizador puede anular los vouchers obtenidos con trampas, como programas automáticos, alteraciones del juego o el uso de varios e-mails o dispositivos para superar los límites.</p><h2>9. Datos personales</h2><p>El e-mail y los datos del juego se usan solo para enviar y validar el voucher, como se explica en la <a href=\"/privacidad/\">política de privacidad</a>.</p><h2>10. Cambios</h2><p>El organizador puede modificar o suspender el juego por causas justificadas, informándolo en esta página y sin afectar los vouchers ya entregados. Participar implica aceptar estas bases.</p><p>Consultas: <a href=\"https://wa.me/5493517630322\" target=\"_blank\" rel=\"noopener\">WhatsApp 351 763-0322</a> · <a href=\"mailto:alejandro@vikingo-paintball.com\">alejandro@vikingo-paintball.com</a>. Última actualización: 12 de noviembre de 2026.</p>"
+        }
+      ]
+    },
+    "arrepentimiento": {
+      "label": "Botón de arrepentimiento",
+      "title": "Botón de arrepentimiento",
+      "subtitle": "Cancelá una reserva o una compra hecha a distancia dentro de los 10 días.",
+      "seoTitle": "Botón de arrepentimiento | Vikingo Paintball Córdoba",
+      "seoDescription": "Solicitá la cancelación de una reserva o compra hecha por la web, WhatsApp o teléfono en Vikingo Paintball Córdoba.",
+      "blocks": [
+        {
+          "id": "legalarre01",
+          "type": "text",
+          "html": "<p>Si contrataste un servicio o compraste un producto a distancia (por esta web, por WhatsApp o por teléfono), podés revocar la aceptación dentro de los <strong>10 días corridos</strong> desde que lo contrataste o desde que recibiste el producto, lo último que ocurra, sin costo ni responsabilidad alguna (artículo 34 de la Ley 24.240 de Defensa del Consumidor y artículos 1110 y siguientes del Código Civil y Comercial de la Nación).</p><p>Completá el formulario y te damos un <strong>código de identificación</strong> de tu solicitud.</p><p>Si no te presentás a una partida reservada sin haberla cancelado antes, la seña no se devuelve, porque con ella compramos los insumos para tu grupo.</p>"
+        },
+        {
+          "id": "legalarre02",
+          "type": "regret",
+          "title": "Solicitar la cancelación",
+          "intro": "",
+          "submitText": "Enviar solicitud de arrepentimiento"
+        }
+      ]
     }
   },
   "updatedAt": "2026-11-12T00:30:46.507Z"

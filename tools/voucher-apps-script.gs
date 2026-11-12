@@ -11,6 +11,8 @@
      al jugador y te avisa a vos por e-mail.
    La hoja es tu registro: cuando alguien venga con su código, lo buscás y cambiás
    «Estado» a «Canjeado».
+   - Botón de arrepentimiento: cada solicitud queda en la hoja «Arrepentimientos» con
+     un código (AR-XXXXXX) que se le envía al cliente; a vos te llega un aviso.
    ========================================================================== */
 
 const CONFIG = {
@@ -25,6 +27,8 @@ const CONFIG = {
   MIN_SEGUNDOS: 5,               // una partida ganada más rápido que esto no es creíble
   MAX_POR_DIA: 30,               // tope de vouchers por día (frena abusos)
   ZONA: 'America/Argentina/Cordoba',
+  HOJA_ARREPENTIMIENTOS: 'Arrepentimientos',
+  MAX_ARREPENTIMIENTOS_POR_DIA: 15, // frena abusos (cada solicitud envía dos e-mails)
 };
 
 const COLUMNAS = ['Fecha', 'Código', 'E-mail', 'Premio', 'Vence', 'Aciertos', 'Segundos de juego', 'Dispositivo', 'Estado', 'Inicio de la partida', 'ID del dispositivo'];
@@ -43,6 +47,7 @@ function doPost(e) {
   }
   if (data.action === 'start') return out(start(data));
   if (data.action === 'claim') return out(claim(data));
+  if (data.action === 'arrepentimiento') return out(arrepentimiento(data));
   return out({ ok: false, error: 'Acción desconocida.' });
 }
 
@@ -102,6 +107,77 @@ function claim(d) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ---------- botón de arrepentimiento ---------- */
+const NL = String.fromCharCode(10); // salto de línea en los e-mails
+const COLUMNAS_ARR = ['Fecha', 'Código', 'Nombre', 'E-mail', 'Teléfono', 'Fecha de la reserva o compra', 'Detalle', 'Estado'];
+
+function arrepentimiento(d) {
+  const clip = (v, n) => String(v || '').trim().slice(0, n);
+  const nombre = clip(d.nombre, 120), email = clip(d.email, 160).toLowerCase(), detalle = clip(d.detalle, 1500);
+  if (!nombre || !detalle) return { ok: false, error: 'Completá tu nombre y qué querés cancelar.' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Revisá el e-mail: parece que le falta algo.' };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sheet = getRegretSheet();
+    const rows = sheet.getDataRange().getValues().slice(1);
+    const today = fmt(new Date(), 'yyyy-MM-dd');
+    const todayCount = rows.filter((r) => r[0] instanceof Date && fmt(r[0], 'yyyy-MM-dd') === today).length;
+    if (todayCount >= CONFIG.MAX_ARREPENTIMIENTOS_POR_DIA) return { ok: false, error: 'No se pudo registrar. Escribinos por WhatsApp.' };
+
+    const used = new Set(rows.map((r) => r[1]));
+    let code;
+    do code = 'AR-' + randomCode(6); while (used.has(code));
+    const now = new Date();
+    sheet.appendRow([now, code, nombre, email, clip(d.telefono, 40), clip(d.fecha, 20), detalle, 'Pendiente']);
+
+    const resumen = ['Nombre: ' + nombre, 'E-mail: ' + email,
+      d.telefono ? 'Teléfono: ' + clip(d.telefono, 40) : '',
+      d.fecha ? 'Fecha de la reserva o compra: ' + clip(d.fecha, 20) : '',
+      'Detalle: ' + detalle].filter(String).join(NL);
+    MailApp.sendEmail({
+      to: email,
+      subject: 'Recibimos tu solicitud de arrepentimiento: ' + code,
+      body: ['Hola ' + nombre + ':', '',
+        'Recibimos tu solicitud de arrepentimiento (revocación) en Vikingo Paintball Córdoba.', '',
+        'Código de identificación: ' + code, 'Fecha: ' + fmt(now, 'dd/MM/yyyy HH:mm'), '',
+        resumen, '',
+        'Te vamos a contactar para completar la cancelación. Si tenés dudas, escribinos por WhatsApp al ' + CONFIG.WHATSAPP + '.', '',
+        'Vikingo Paintball Córdoba'].join(NL),
+      name: 'Vikingo Paintball',
+    });
+    const to = CONFIG.AVISAR_A || Session.getEffectiveUser().getEmail();
+    if (to) {
+      MailApp.sendEmail({
+        to: to,
+        subject: 'Botón de arrepentimiento: ' + code,
+        body: ['Nueva solicitud de arrepentimiento.', '', 'Código: ' + code, resumen, '',
+          'Queda anotada en la hoja «' + CONFIG.HOJA_ARREPENTIMIENTOS + '». Respondé al cliente y, cuando esté resuelta, cambiá «Estado» a «Resuelto».'].join(NL),
+        replyTo: email,
+      });
+    }
+    return { ok: true, code: code };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getRegretSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(CONFIG.HOJA_ARREPENTIMIENTOS);
+  if (!sh) sh = ss.insertSheet(CONFIG.HOJA_ARREPENTIMIENTOS);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(COLUMNAS_ARR);
+    sh.getRange(1, 1, 1, COLUMNAS_ARR.length).setFontWeight('bold').setBackground('#e8b13a');
+    sh.setFrozenRows(1);
+    sh.getRange('A:A').setNumberFormat('dd/MM/yyyy HH:mm');
+    const estados = SpreadsheetApp.newDataValidation().requireValueInList(['Pendiente', 'Resuelto', 'Rechazado'], true).build();
+    sh.getRange('H2:H').setDataValidation(estados);
+  }
+  return sh;
 }
 
 /* ---------- e-mails ---------- */
@@ -186,8 +262,37 @@ function out(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
+/** Pasa a «Vencido» los vouchers «Pendiente» cuya fecha de «Vence» ya pasó (no toca Canjeado ni PRUEBA). */
+function marcarVencidos() {
+  const sh = getSheet();
+  const last = sh.getLastRow();
+  if (last < 2) return;
+  const rango = sh.getRange(2, 5, last - 1, 5); // columnas E (Vence) a I (Estado)
+  const filas = rango.getValues();
+  const ahora = new Date();
+  let cambios = 0;
+  filas.forEach((r, i) => {
+    if (r[4] === 'Pendiente' && r[0] instanceof Date && r[0] < ahora) {
+      sh.getRange(i + 2, 9).setValue('Vencido');
+      cambios++;
+    }
+  });
+  Logger.log('Vouchers marcados como vencidos: ' + cambios);
+}
+
+/** Ejecutalo una vez a mano (botón ▶): revisa los vencimientos todos los días a la madrugada. */
+function activarRevisionDiaria() {
+  ScriptApp.getProjectTriggers()
+    .filter((t) => t.getHandlerFunction() === 'marcarVencidos')
+    .forEach((t) => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('marcarVencidos').timeBased().everyDays(1).atHour(3).inTimezone(CONFIG.ZONA).create();
+  marcarVencidos();
+  Logger.log('Listo: se revisa todos los días a las 3 de la mañana.');
+}
+
 /** Ejecutalo una vez a mano (botón ▶) para crear la hoja y autorizar el envío de e-mails. */
 function prepararHoja() {
   getSheet();
+  getRegretSheet();
   Logger.log('Hoja lista. Avisos a: ' + (CONFIG.AVISAR_A || Session.getEffectiveUser().getEmail()));
 }

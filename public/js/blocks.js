@@ -6,6 +6,7 @@ import { el, icon, iconBtn, toast, pickFile, formDialog, embedUrl, bindEditable,
 import { store, uploadFile, sendReserva, uid } from './store.js';
 import { mediaUrl } from './media.js';
 import { renderGForm, GFORM_DEFAULT } from './gform.js';
+import { renderRegret, REGRET_DEFAULT } from './legal.js';
 
 /* ---------- Quill (editor de texto enriquecido), carga bajo demanda ---------- */
 let quillPromise = null;
@@ -446,6 +447,13 @@ export const BLOCK_TYPES = {
     icon: 'form',
     create: () => structuredClone(GFORM_DEFAULT),
     render: (b, ctx) => renderGForm(b, ctx, { bindEditable, formDialog, btn }),
+  },
+
+  regret: {
+    label: 'Botón de arrepentimiento',
+    icon: 'form',
+    create: () => structuredClone(REGRET_DEFAULT),
+    render: (b, ctx) => renderRegret(b, ctx, { bindEditable }),
   },
 
   form: {

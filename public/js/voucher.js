@@ -141,13 +141,20 @@ function introDialog() {
     body: el('div.voucher-intro', {},
       el('p', {}, `Tenés ${mins} para pegarle ${c.hits} veces al soldado que cruza corriendo entre los árboles.`),
       el('p', {}, `Si lo lográs, te ganás un voucher para usar en Vikingo Paintball.`),
-      el('p.help', {}, triesText(status().left))
+      el('p.help', {}, triesText(status().left)),
+      legalNote('Al jugar aceptás las ')
     ),
     actions: [
       { label: 'Ahora no', variant: 'ghost', onClick: (cl) => cl() },
       { label: '¡Empezar!', onClick: (cl) => { cl(); startGame(); } },
     ],
   });
+}
+
+/** «…bases y condiciones y la política de privacidad» (se abren en otra pestaña: el cartel sigue abierto) */
+function legalNote(start) {
+  const a = (href, text) => el('a', { href, target: '_blank', rel: 'noopener' }, text);
+  return el('p.form-note', {}, start, a('/bases-voucher/', 'bases y condiciones'), ' y la ', a('/privacidad/', 'política de privacidad'), '.');
 }
 
 function triesText(left) {
@@ -256,7 +263,8 @@ function claimDialog(win) {
   const form = el('form.voucher-form', { novalidate: true },
     el('label.field.full', {}, el('span', {}, 'Tu e-mail'), input),
     err,
-    el('div.modal-actions', {}, send)
+    el('div.modal-actions', {}, send),
+    legalNote('Usamos tu e-mail solo para enviarte el voucher y validarlo. Al enviarlo aceptás las ')
   );
   const m = modal({
     title: '🏆 ¡Voucher ganado!',
