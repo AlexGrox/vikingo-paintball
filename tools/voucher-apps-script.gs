@@ -74,9 +74,12 @@ function claim(d) {
     if (!started) return { ok: false, error: 'La partida venció o no es válida. Volvé a intentarlo desde la web.' };
     if (Date.now() - started < CONFIG.MIN_SEGUNDOS * 1000) return { ok: false, error: 'Partida no válida.' };
 
+    // las pruebas (sin límites) solo valen con el e-mail de la cuenta dueña: así nadie puede saltarse las reglas
+    const test = d.test === true;
+    if (test && email !== ownerEmail()) return { ok: false, error: 'Para probar, usá el e-mail de la cuenta dueña del registro.' };
+
     const sheet = getSheet();
     const rows = sheet.getDataRange().getValues().slice(1);
-    const test = d.test === true;
     if (!test) {
       const deviceId = String(d.deviceId || '').slice(0, 20);
       const last = lastWin(rows, (r) => String(r[2]).toLowerCase() === email || (deviceId && r[10] === deviceId));
@@ -95,9 +98,9 @@ function claim(d) {
     const now = new Date();
     const vence = new Date(now.getTime() + CONFIG.VALIDEZ_DIAS * 86400000);
     sheet.appendRow([
-      now, code, email, CONFIG.PREMIO, vence,
-      Number(d.hits) || '', Number(d.seconds) || '', String(d.device || '').slice(0, 20),
-      test ? 'PRUEBA' : 'Pendiente', new Date(started), String(d.deviceId || '').slice(0, 20),
+      now, code, cell(email), CONFIG.PREMIO, vence,
+      Number(d.hits) || '', Number(d.seconds) || '', cell(String(d.device || '').slice(0, 20)),
+      test ? 'PRUEBA' : 'Pendiente', new Date(started), cell(String(d.deviceId || '').slice(0, 20)),
     ]);
     cache.remove('t_' + d.token); // cada partida da un solo voucher
 
@@ -132,19 +135,21 @@ function arrepentimiento(d) {
     let code;
     do code = 'AR-' + randomCode(6); while (used.has(code));
     const now = new Date();
-    sheet.appendRow([now, code, nombre, email, clip(d.telefono, 40), clip(d.fecha, 20), detalle, 'Pendiente']);
+    sheet.appendRow([now, code, cell(nombre), cell(email), cell(clip(d.telefono, 40)), cell(clip(d.fecha, 20)), cell(detalle), 'Pendiente']);
 
     const resumen = ['Nombre: ' + nombre, 'E-mail: ' + email,
       d.telefono ? 'Teléfono: ' + clip(d.telefono, 40) : '',
       d.fecha ? 'Fecha de la reserva o compra: ' + clip(d.fecha, 20) : '',
       'Detalle: ' + detalle].filter(String).join(NL);
+    // al cliente no se le repite lo que escribió: así nadie puede usar el formulario para mandar
+    // mensajes propios (enlaces, estafas) a otras personas desde tu cuenta
     MailApp.sendEmail({
       to: email,
       subject: 'Recibimos tu solicitud de arrepentimiento: ' + code,
-      body: ['Hola ' + nombre + ':', '',
+      body: ['Hola:', '',
         'Recibimos tu solicitud de arrepentimiento (revocación) en Vikingo Paintball Córdoba.', '',
         'Código de identificación: ' + code, 'Fecha: ' + fmt(now, 'dd/MM/yyyy HH:mm'), '',
-        resumen, '',
+        'Si no hiciste esta solicitud, ignorá este mensaje.', '',
         'Te vamos a contactar para completar la cancelación. Si tenés dudas, escribinos por WhatsApp al ' + CONFIG.WHATSAPP + '.', '',
         'Vikingo Paintball Córdoba'].join(NL),
       name: 'Vikingo Paintball',
@@ -252,6 +257,16 @@ function randomCode(n) {
   let s = '';
   for (let i = 0; i < n; i++) s += abc.charAt(Math.floor(Math.random() * abc.length));
   return s;
+}
+
+/** Texto escrito por el visitante → celda de texto (un «=» al principio no se ejecuta como fórmula) */
+function cell(v) {
+  const s = String(v == null ? '' : v);
+  return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+}
+
+function ownerEmail() {
+  return String(CONFIG.AVISAR_A || Session.getEffectiveUser().getEmail() || '').trim().toLowerCase();
 }
 
 function fmt(d, pattern) {
