@@ -1,8 +1,7 @@
 # Vikingo Paintball Córdoba
 User-agent: *
 Allow: /
-# archivos internos que no aportan a los buscadores
-Disallow: /uploads/
-Disallow: /content.json
+# sin bloqueos: Google necesita content.json para dibujar la página como la ve un visitante,
+# y las fotos de /uploads/ (productos, juegos) pueden aparecer en Google Imágenes
 
 Sitemap: https://www.vikingo-paintball.com/sitemap.xml

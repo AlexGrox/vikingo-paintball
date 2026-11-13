@@ -33,7 +33,7 @@ function renderBlock(b) {
     case 'text':
       return `<div class="rich">${b.html || ''}</div>`;
     case 'cards':
-      return `<div class="cards">${(b.items || []).map((it) => `<article class="card"><div class="card-body">${it.tag ? `<span class="card-tag">${esc(it.tag)}</span>` : ''}<h3>${esc(it.title)}</h3><p>${esc(it.text)}</p></div></article>`).join('')}</div>`;
+      return `<div class="cards">${(b.items || []).map((it) => `<article class="card">${it.img ? `<div class="card-img"><img src="${esc(it.img)}" alt="${esc(it.title || '')}" loading="lazy" /></div>` : ''}<div class="card-body">${it.tag ? `<span class="card-tag">${esc(it.tag)}</span>` : ''}<h3>${esc(it.title)}</h3><p>${esc(it.text)}</p></div></article>`).join('')}</div>`;
     case 'table':
       return `<div class="table-wrap"><table class="data"><thead><tr>${(b.headers || []).map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${(b.rows || []).map((r) => `<tr>${(b.headers || []).map((_, i) => `<td>${esc(r[i] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     case 'image':
@@ -133,14 +133,25 @@ fs.writeFileSync(path.join(SITE, 'index.html'), base.replace('<ul id="fallback-l
 /* ---------- sitemap ---------- */
 const lastmod = (content.updatedAt || new Date().toISOString()).slice(0, 10);
 const urls = ['', ...order.map((k) => `${k}/`), ...pageOnly.map((k) => `${k}/`)];
+// fotos de cada página (tarjetas, imágenes y galerías) para Google Imágenes
+const imagesOf = (u) => {
+  if (!u) return ['img/og-vikingo.jpg'];
+  const sec = content.sections[u.slice(0, -1)] || {};
+  const list = (sec.blocks || []).flatMap((b) => [
+    ...(b.items || []).map((it) => it.img),
+    b.type === 'image' ? b.src : null,
+    ...(b.images || []).map((im) => im.src),
+  ]);
+  return [...new Set(list.filter((s) => s && !/^(data|blob):/.test(s)))];
+};
 fs.writeFileSync(path.join(SITE, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls.map((u) => `  <url>
     <loc>${ORIGIN}/${u}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>${!u ? '1.0' : pageOnly.includes(u.slice(0, -1)) ? '0.3' : '0.8'}</priority>${u ? '' : `
-    <image:image><image:loc>${abs('img/og-vikingo.jpg')}</image:loc></image:image>`}
+    <priority>${!u ? '1.0' : pageOnly.includes(u.slice(0, -1)) ? '0.3' : '0.8'}</priority>${imagesOf(u).map((src) => `
+    <image:image><image:loc>${esc(abs(src))}</image:loc></image:image>`).join('')}
   </url>`).join('\n')}
 </urlset>
 `);

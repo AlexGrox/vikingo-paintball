@@ -166,7 +166,7 @@
           "items": [
             {
               "q": "¿Cuánto cuesta jugar al paintball en Vikingo Paintball?",
-              "a": "El precio por jugador incluye marcadora, máscara, garrafa y 200 bolitas. Los valores actualizados de la promoción, el chaleco y la promoción de cumpleaños están en las tarjetas de esta sección. Podés recargar bolitas en cualquier momento."
+              "a": "La promoción cuesta $40.000 por jugador e incluye marcadora, máscara, garrafa y 200 bolitas. El chaleco balístico se alquila aparte ($3.000 por jugador) y la promoción de cumpleaños tiene 100 disparos extra de regalo para el cumpleañero. Podés recargar bolitas en cualquier momento."
             },
             {
               "q": "¿Desde qué edad se puede jugar?",
@@ -207,8 +207,8 @@
           ]
         }
       ],
-      "seoTitle": "Reservas de paintball en Córdoba | Vikingo Paintball",
-      "seoDescription": "Reservá tu partida de paintball en la zona sur de Córdoba Capital. Precio promoción con marcadora, máscara y bolitas incluidas. Grupos y cumpleaños."
+      "seoTitle": "Precios y reservas de paintball en Córdoba | Vikingo Paintball",
+      "seoDescription": "Precios de paintball en Córdoba Capital: $40.000 por jugador con marcadora, máscara, garrafa y 200 bolitas. Grupos y cumpleaños. Reservá online o por WhatsApp."
     },
     "juegos": {
       "label": "JUEGOS",

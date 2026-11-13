@@ -38,7 +38,7 @@ export function updatePriceData(content) {
           price: p.price,
           priceCurrency: 'ARS',
           availability: 'https://schema.org/InStock',
-          url: `https://www.vikingo-paintball.com/#/${key}`,
+          url: `https://www.vikingo-paintball.com/${key}/`,
           ...(p.unit ? { priceSpecification: { '@type': 'UnitPriceSpecification', price: p.price, priceCurrency: 'ARS', unitText: clean(p.unit, 40) } } : {}),
         });
       }

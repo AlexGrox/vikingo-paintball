@@ -118,8 +118,11 @@ function showPanel(key) {
   void panel.offsetWidth;
   panel.classList.add('enter');
   shownKey = key;
-  document.title = `${store.content.sections[key].label} · ${store.content.site.name}`;
-  trackPage('/' + key, document.title);
+  const sec = store.content.sections[key];
+  const shortTitle = `${sec.label} · ${store.content.site.name}`;
+  // el título para buscadores de la sección (Google lee la página ya cargada); en Analytics se sigue usando el corto
+  document.title = sec.seoTitle || shortTitle;
+  trackPage('/' + key, shortTitle);
   trackEvent('abrir_seccion', { seccion: key, origen: navOrigin || 'navegador' });
   navOrigin = null;
   panel.focus({ preventScroll: true });

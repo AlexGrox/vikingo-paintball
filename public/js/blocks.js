@@ -252,7 +252,7 @@ export const BLOCK_TYPES = {
     render(b, ctx) {
       const grid = el('div.cards');
       b.items.forEach((it, i) => {
-        const media = el('div.card-img', {}, it.img ? el('img', { src: mediaUrl(it.img), alt: '', loading: 'lazy' }) : el('div.noimg', {}, icon('image', 48)));
+        const media = el('div.card-img', {}, it.img ? el('img', { src: mediaUrl(it.img), alt: it.title || '', loading: 'lazy' }) : el('div.noimg', {}, icon('image', 48)));
         if (!it.img && !ctx.editing) media.hidden = true;
         const tag = el('span.card-tag', {}, it.tag || '');
         const title = el('h3', {}, it.title || '');
