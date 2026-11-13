@@ -28,7 +28,7 @@ const UPV = new THREE.Vector3(0, 1, 0);
  * @param {()=>boolean} [o.canShoot]  si puede disparar a la cámara (solo en la portada)
  * @param {(x:number, y:number, color:string)=>void} [o.onScreenHit]  bola que revienta en pantalla (x, y en 0..1)
  */
-export function createRunner({ scene, camera, isClear, groundHeight, occluders, canShoot = () => false, onScreenHit, spawnTries = 10 }) {
+export function createRunner({ scene, camera, isClear, groundHeight, occluders, canShoot = () => false, onScreenHit, spawnTries = 10, aimTolerancePx = 0 }) {
   const R = (a, b) => a + (b - a) * Math.random();
 
   const tex = new THREE.Texture();
@@ -224,17 +224,34 @@ export function createRunner({ scene, camera, isClear, groundHeight, occluders, 
     }
   }
 
+  /** ¿Hay silueta (no transparente) en ese punto del fotograma actual? u, v en 0..1 */
+  function solidAt(u01, v01) {
+    if (u01 < 0 || u01 > 1 || v01 < 0 || v01 > 1) return false;
+    const u = tex.offset.x + u01 * tex.repeat.x;
+    const v = tex.offset.y + v01 * tex.repeat.y;
+    const x = Math.min(alpha.w - 1, Math.max(0, Math.floor(u * alpha.w)));
+    const y = Math.min(alpha.h - 1, Math.max(0, Math.floor((1 - v) * alpha.h))); // la imagen va invertida (flipY)
+    return alpha.data[(y * alpha.w + x) * 4 + 3] >= 90;
+  }
+
   /** ¿El rayo (ya preparado con setFromCamera) toca la silueta visible del jugador? */
   function hitTest(raycaster) {
     if (!run || run.hit || !sprite.visible) return null;
     const h = raycaster.intersectObject(sprite, false)[0];
     if (!h || !h.uv) return null;
-    if (alpha) {
-      const u = tex.offset.x + h.uv.x * tex.repeat.x;
-      const v = tex.offset.y + h.uv.y * tex.repeat.y;
-      const x = Math.min(alpha.w - 1, Math.max(0, Math.floor(u * alpha.w)));
-      const y = Math.min(alpha.h - 1, Math.max(0, Math.floor((1 - v) * alpha.h))); // la imagen va invertida (flipY)
-      if (alpha.data[(y * alpha.w + x) * 4 + 3] < 90) return null; // hueco transparente
+    if (alpha && !solidAt(h.uv.x, h.uv.y)) {
+      // hueco transparente: con margen de puntería vale si la silueta está a pocos píxeles de la mira
+      if (!aimTolerancePx) return null;
+      const pxPerM = window.innerHeight / (2 * h.distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+      let near = false;
+      for (let ring = 1; ring <= 2 && !near; ring++) {
+        const du = (aimTolerancePx * ring) / 2 / (sprite.scale.x * pxPerM), dv = (aimTolerancePx * ring) / 2 / (sprite.scale.y * pxPerM);
+        for (let k = 0; k < 8 && !near; k++) {
+          const a = (k * Math.PI) / 4;
+          near = solidAt(h.uv.x + Math.cos(a) * du, h.uv.y + Math.sin(a) * dv);
+        }
+      }
+      if (!near) return null;
     }
     return { point: h.point.clone(), distance: h.distance, offset: h.point.clone().sub(sprite.position) };
   }

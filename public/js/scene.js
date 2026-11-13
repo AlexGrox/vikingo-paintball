@@ -1771,6 +1771,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     isClear: isClearArea,
     occluders: solids,
     spawnTries: QUALITY.spawnTries,
+    aimTolerancePx: QUALITY.mobile ? 0 : 6, // en PC, margen de puntería alrededor de la silueta
     // solo dispara a la cámara en la portada y con la cámara quieta
     canShoot: () => mode === 'home' && !tween,
     onScreenHit: screenSplat,
