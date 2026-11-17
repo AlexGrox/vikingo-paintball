@@ -138,7 +138,7 @@ const imagesOf = (u) => {
   if (!u) return ['img/og-vikingo.jpg'];
   const sec = content.sections[u.slice(0, -1)] || {};
   const list = (sec.blocks || []).flatMap((b) => [
-    ...(b.items || []).map((it) => it.img),
+    ...(b.items || []).flatMap((it) => [it.img, ...(it.photos || [])]),
     b.type === 'image' ? b.src : null,
     ...(b.images || []).map((im) => im.src),
   ]);

@@ -256,6 +256,17 @@ export const BLOCK_TYPES = {
       b.items.forEach((it, i) => {
         const media = el('div.card-img', {}, it.img ? el('img', { src: mediaUrl(it.img), alt: it.title || '', loading: 'lazy' }) : el('div.noimg', {}, icon('image', 48)));
         if (!it.img && !ctx.editing) media.hidden = true;
+        // fotos: la principal (img) y las extra (photos); al tocarla se abre el visor con todas
+        const photos = [it.img, ...(it.photos || [])].filter(Boolean);
+        if (!ctx.editing && it.img) {
+          media.classList.add('zoomable');
+          Object.assign(media, { tabIndex: 0, role: 'button', title: 'Ver fotos' });
+          media.setAttribute('aria-label', `Ver ${photos.length > 1 ? 'las fotos' : 'la foto'} de ${it.title || 'este producto'}`);
+          const open = () => openLightbox(photos.map(mediaUrl), 0, it.title || '');
+          media.addEventListener('click', open);
+          media.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), open()));
+          if (photos.length > 1) media.append(el('span.photo-count', { 'aria-hidden': 'true' }, `📷 ${photos.length}`));
+        }
         const tag = el('span.card-tag', {}, it.tag || '');
         const title = el('h3', {}, it.title || '');
         const text = el('p', {}, it.text || '');
@@ -269,8 +280,34 @@ export const BLOCK_TYPES = {
           bindEditable(text, it, 'text', ctx.changed, { multiline: true, placeholder: 'Descripción' });
           media.append(el('div.edit-overlay', {},
             btn(it.img ? 'Cambiar' : 'Imagen', () => uploadInto(it, 'img', 'image/*', ctx.changed, ctx.rerender)),
-            it.img ? btn('Quitar', () => { it.img = ''; ctx.changed(); ctx.rerender(); }, 'ghost') : null
+            it.img ? btn('Quitar', () => {
+              it.img = (it.photos || []).shift() || ''; // la siguiente foto pasa a ser la principal
+              if (it.photos && !it.photos.length) delete it.photos;
+              ctx.changed(); ctx.rerender();
+            }, 'ghost') : null,
+            btn('+ Fotos', async () => {
+              const files = await pickFile('image/*', true);
+              if (!files || !files.length) return;
+              toast(`Subiendo ${files.length} foto(s)…`);
+              for (const f of files) {
+                try {
+                  const { url } = await uploadFile(f);
+                  if (!it.img) it.img = url;
+                  else (it.photos = it.photos || []).push(url);
+                } catch (e) { toast(e.message, 'err'); }
+              }
+              ctx.changed(); ctx.rerender();
+            }, 'ghost')
           ));
+          // fotos extra: hacer principal o quitar
+          if ((it.photos || []).length) {
+            card.insertBefore(el('div.card-thumbs', {}, it.photos.map((src, pi) => el('figure', {},
+              el('img', { src: mediaUrl(src), alt: '', loading: 'lazy' }),
+              el('div.thumb-tools', {},
+                iconBtn('star', 'Usar como foto principal', () => { it.photos[pi] = it.img; it.img = src; ctx.changed(); ctx.rerender(); }),
+                iconBtn('trash', 'Quitar esta foto', () => { it.photos.splice(pi, 1); if (!it.photos.length) delete it.photos; ctx.changed(); ctx.rerender(); }, 'danger'))))),
+            body);
+          }
           body.append(el('div.edit-row', {},
             btn(it.link ? `Botón: ${it.linkText || 'Ver más'}` : 'Añadir botón', async () => {
               const r = await formDialog({
@@ -591,11 +628,55 @@ function moveCol(b, ci, d) {
   return true;
 }
 
-function openLightbox(src) {
-  const lb = el('div.lightbox', { role: 'dialog', 'aria-label': 'Imagen ampliada' }, el('img', { src, alt: '' }));
+/**
+ * Visor de fotos a pantalla completa. Con varias fotos: flechas, contador, miniaturas,
+ * teclado (← →) y deslizar con el dedo. Se cierra con Esc, la ✕ o tocando el fondo.
+ */
+function openLightbox(srcs, start = 0, title = '') {
+  const list = [].concat(srcs).filter(Boolean);
+  if (!list.length) return;
+  let i = Math.min(Math.max(0, start), list.length - 1);
+  const many = list.length > 1;
+  const img = el('img', { alt: title });
+  const count = el('span.lb-count');
+  const thumbs = many ? el('div.lb-thumbs', {}, list.map((s, k) =>
+    el('button.lb-thumb', { type: 'button', 'aria-label': `Foto ${k + 1}`, onclick: (e) => { e.stopPropagation(); show(k); } },
+      el('img', { src: s, alt: '', loading: 'lazy' })))) : null;
+  const nav = (d, label, cls) => el('button.lb-nav.' + cls, { type: 'button', 'aria-label': label, onclick: (e) => { e.stopPropagation(); show(i + d); } }, icon(d < 0 ? 'left' : 'right', 30));
+  const lb = el('div.lightbox' + (many ? '.many' : ''), { role: 'dialog', 'aria-modal': 'true', 'aria-label': title ? `Fotos de ${title}` : 'Imagen ampliada' },
+    el('button.lb-close', { type: 'button', 'aria-label': 'Cerrar', onclick: () => close() }, icon('close', 26)),
+    many ? nav(-1, 'Foto anterior', 'prev') : null,
+    el('figure.lb-stage', {}, img),
+    many ? nav(1, 'Foto siguiente', 'next') : null,
+    many ? el('div.lb-foot', {}, count, thumbs) : null);
+
+  function show(k) {
+    i = (k + list.length) % list.length;
+    img.src = list[i];
+    count.textContent = `${i + 1} / ${list.length}`;
+    if (thumbs) [...thumbs.children].forEach((t, n) => t.classList.toggle('on', n === i));
+    if (thumbs) thumbs.children[i].scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
   const close = () => { lb.remove(); document.removeEventListener('keydown', onKey); };
-  const onKey = (e) => e.key === 'Escape' && close();
-  lb.addEventListener('click', close);
+  const onKey = (e) => {
+    if (e.key === 'Escape') close();
+    else if (many && e.key === 'ArrowLeft') show(i - 1);
+    else if (many && e.key === 'ArrowRight') show(i + 1);
+  };
+  // tocar el fondo cierra; tocar la foto pasa a la siguiente
+  lb.addEventListener('click', (e) => { if (e.target === lb || e.target.classList.contains('lb-stage')) close(); });
+  img.addEventListener('click', (e) => { e.stopPropagation(); many ? show(i + 1) : close(); });
+  // deslizar con el dedo
+  let x0 = null;
+  lb.addEventListener('touchstart', (e) => (x0 = e.touches[0].clientX), { passive: true });
+  lb.addEventListener('touchend', (e) => {
+    if (x0 === null || !many) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  });
   document.addEventListener('keydown', onKey);
   document.body.append(lb);
+  show(i);
+  lb.querySelector('.lb-close').focus();
 }

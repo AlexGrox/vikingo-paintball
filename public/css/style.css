@@ -449,8 +449,45 @@ body.in-section #home, body.in-section #scene { cursor: default; }
 .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; cursor: zoom-in; transition: transform .2s; }
 .gallery img:hover { transform: scale(1.02); }
 .gallery figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; }
-.lightbox { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.92); display: grid; place-items: center; padding: 20px; cursor: zoom-out; }
-.lightbox img { max-height: 90vh; width: auto; border-radius: 8px; }
+.lightbox {
+  position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.94); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; padding: 20px; cursor: zoom-out;
+}
+.lb-stage { margin: 0; flex: 1; min-height: 0; width: 100%; display: grid; place-items: center; }
+.lb-stage img { max-height: calc(100vh - 60px); max-height: calc(100dvh - 60px); max-width: 100%; width: auto; border-radius: 8px; cursor: zoom-out; object-fit: contain; }
+.lightbox.many .lb-stage img { cursor: pointer; max-height: calc(100vh - 190px); max-height: calc(100dvh - 190px); }
+.lightbox:not(.many) .lb-stage { max-height: 90vh; }
+@media (min-width: 621px) { .lightbox.many .lb-stage { padding: 0 80px; } }
+.lb-close, .lb-nav {
+  position: absolute; z-index: 2; display: grid; place-items: center; border: 0; cursor: pointer;
+  color: #fff; background: rgba(255,255,255,.12); border-radius: 50%;
+}
+.lb-close { top: 14px; right: 14px; width: 46px; height: 46px; }
+.lb-nav { top: 50%; transform: translateY(-50%); width: 54px; height: 54px; }
+.lb-nav.prev { left: 14px; }
+.lb-nav.next { right: 14px; }
+.lb-close:hover, .lb-nav:hover { background: var(--accent); color: var(--accent-ink); }
+.lb-foot { display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 100%; cursor: auto; }
+.lb-count { color: #ddd; font-family: var(--font-ui); letter-spacing: .08em; }
+.lb-thumbs { display: flex; gap: 8px; overflow-x: auto; max-width: 100%; padding: 2px; scrollbar-width: thin; }
+.lb-thumb { flex: 0 0 auto; width: 64px; height: 64px; padding: 0; border: 2px solid transparent; border-radius: 6px; overflow: hidden; background: none; cursor: pointer; opacity: .55; }
+.lb-thumb.on { border-color: var(--accent); opacity: 1; }
+.lb-thumb img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 620px) {
+  .lb-nav { width: 42px; height: 42px; top: auto; bottom: 96px; transform: none; }
+  .lb-thumb { width: 52px; height: 52px; }
+}
+/* tarjetas: foto que se amplía y fotos extra en edición */
+.card-img.zoomable { cursor: zoom-in; }
+.card-img.zoomable:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.photo-count {
+  position: absolute; right: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; font-size: 14px;
+  background: rgba(0,0,0,.65); color: #fff; font-family: var(--font-ui); letter-spacing: .04em;
+}
+.card-thumbs { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 0; }
+.card-thumbs figure { position: relative; margin: 0; width: 72px; height: 72px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.card-thumbs img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-tools { position: absolute; inset: auto 0 0 0; display: flex; justify-content: space-between; background: rgba(0,0,0,.6); }
 
 /* ---------- Preguntas frecuentes ---------- */
 .faq h2 { font-family: var(--font-display); font-weight: 400; font-size: 36px; margin: 0 0 14px; }
