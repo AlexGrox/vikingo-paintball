@@ -7,7 +7,7 @@ import { store, uploadFile, sendReserva, uid } from './store.js';
 import { mediaUrl } from './media.js';
 import { renderGForm, GFORM_DEFAULT } from './gform.js';
 import { renderRegret, REGRET_DEFAULT } from './legal.js';
-import { renderShop, ensureIds } from './shop.js';
+import { renderShop, ensureIds, stockNode } from './shop.js';
 
 /* ---------- Quill (editor de texto enriquecido), carga bajo demanda ---------- */
 let quillPromise = null;
@@ -259,7 +259,8 @@ export const BLOCK_TYPES = {
         const tag = el('span.card-tag', {}, it.tag || '');
         const title = el('h3', {}, it.title || '');
         const text = el('p', {}, it.text || '');
-        const body = el('div.card-body', {}, tag, title, text);
+        // tienda: el stock va al lado del precio (en edición, como campo para cambiarlo)
+        const body = el('div.card-body', {}, b.shop ? el('div.card-meta', {}, tag, stockNode(it, ctx)) : tag, title, text);
         const card = el('article.card', {}, media, body);
 
         if (ctx.editing) {
@@ -310,7 +311,7 @@ export const BLOCK_TYPES = {
               fields: [{
                 key: 'shop', type: 'checkbox',
                 label: 'Los visitantes pueden elegir cantidades y enviar un pedido',
-                help: 'Solo las tarjetas con precio en la etiqueta (por ejemplo «$10.000») se pueden pedir. El pedido te llega por e-mail y queda en la hoja «Pedidos».',
+                help: 'Solo las tarjetas con precio en la etiqueta (por ejemplo «$10.000») se pueden pedir. El stock se carga en cada tarjeta (vacío = sin límite; 0 = sin stock). El pedido te llega por e-mail y queda en la hoja «Pedidos».',
               }],
             });
             if (r) { b.shop = r.shop; ctx.changed(); ctx.rerender(); }

@@ -35,10 +35,35 @@ function refreshAll() {
   refreshers.forEach((r) => (r.bar.isConnected ? r.refresh() : refreshers.delete(r)));
 }
 
-/** Productos pedibles de un bloque: { id, title, price } */
+/** Stock cargado en la tarjeta: número (0 = sin stock) o null si no tiene límite */
+export function stockOf(it) {
+  if (it.stock === '' || it.stock == null) return null;
+  const n = Math.floor(Number(it.stock));
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+/** Cartel de stock al lado del precio; en edición, un campo para cambiarlo */
+export function stockNode(it, ctx) {
+  if (ctx.editing) {
+    const input = el('input.stock-input', {
+      type: 'number', min: 0, step: 1, inputmode: 'numeric', value: stockOf(it) ?? '',
+      placeholder: 'sin límite', 'aria-label': 'Stock disponible',
+      oninput: () => { it.stock = input.value === '' ? '' : Math.max(0, Math.floor(Number(input.value) || 0)); ctx.changed(); },
+    });
+    return el('label.card-stock.editing', { title: 'Vacío = sin límite · 0 = sin stock' }, 'Stock: ', input);
+  }
+  const s = stockOf(it);
+  if (s === null) return null;
+  return el('span.card-stock' + (s === 0 ? '.out' : ''), {}, s === 0 ? 'Sin stock' : `Stock: ${s}`);
+}
+
+/** Productos pedibles de un bloque: { id, title, price, max } (max = lo que se puede pedir) */
 function products(b) {
   return (b.items || [])
-    .map((it) => ({ id: it.id, title: it.title || '', price: (parsePrice(it.tag) || {}).price }))
+    .map((it) => {
+      const s = stockOf(it);
+      return { id: it.id, title: it.title || '', price: (parsePrice(it.tag) || {}).price, max: s === null ? MAX_QTY : Math.min(MAX_QTY, s) };
+    })
     .filter((p) => p.id && p.title && p.price);
 }
 
@@ -69,6 +94,14 @@ export function renderShop(b, grid) {
   const orderBtn = el('button.btn', { type: 'button', onclick: () => openOrder(b) }, 'Hacer pedido');
   bar.append(summary, orderBtn);
 
+  // si bajó el stock desde que se armó el carrito, se ajusta la cantidad
+  let fixed = false;
+  for (const p of list) {
+    if (cart[p.id] > p.max) { if (p.max) cart[p.id] = p.max; else delete cart[p.id]; fixed = true; }
+  }
+  if (fixed) saveCart();
+
+  const plusBtns = new Map();
   const refresh = () => {
     let units = 0, total = 0;
     for (const [id, q] of Object.entries(cart)) {
@@ -78,6 +111,7 @@ export function renderShop(b, grid) {
       total += q * p.price;
     }
     counters.forEach((node, id) => (node.textContent = String(cart[id] || 0)));
+    plusBtns.forEach((btnPlus, id) => (btnPlus.disabled = (cart[id] || 0) >= byId.get(id).max));
     bar.hidden = units === 0;
     summary.textContent = `🛒 ${units} ${units === 1 ? 'producto' : 'productos'} · Total ${money(total)}`;
   };
@@ -85,19 +119,20 @@ export function renderShop(b, grid) {
   (b.items || []).forEach((it, i) => {
     const p = byId.get(it.id);
     const card = cards[i];
-    if (!p || !card) return;
+    if (!p || !card || !p.max) return; // sin stock: no se puede pedir
     const count = el('span.qty-n', { 'aria-live': 'polite' }, '0');
     counters.set(p.id, count);
     const change = (d) => {
-      const q = Math.max(0, Math.min(MAX_QTY, (cart[p.id] || 0) + d));
+      const q = Math.max(0, Math.min(p.max, (cart[p.id] || 0) + d));
       if (q) cart[p.id] = q; else delete cart[p.id];
       saveCart();
       refresh();
     };
+    const plus = el('button.qty-btn', { type: 'button', 'aria-label': `Agregar uno: ${p.title}`, onclick: () => change(1) }, '+');
+    plusBtns.set(p.id, plus);
     card.querySelector('.card-body').append(el('div.qty', {},
       el('button.qty-btn', { type: 'button', 'aria-label': `Quitar uno: ${p.title}`, onclick: () => change(-1) }, '−'),
-      count,
-      el('button.qty-btn', { type: 'button', 'aria-label': `Agregar uno: ${p.title}`, onclick: () => change(1) }, '+')));
+      count, plus));
   });
   refresh();
   refreshers.add({ bar, refresh });

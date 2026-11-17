@@ -37,7 +37,7 @@ export function updatePriceData(content) {
           category: clean(sec.label, 40),
           price: p.price,
           priceCurrency: 'ARS',
-          availability: 'https://schema.org/InStock',
+          availability: b.shop && it.stock !== '' && it.stock != null && Number(it.stock) <= 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
           url: `https://www.vikingo-paintball.com/${key}/`,
           ...(p.unit ? { priceSpecification: { '@type': 'UnitPriceSpecification', price: p.price, priceCurrency: 'ARS', unitText: clean(p.unit, 40) } } : {}),
         });

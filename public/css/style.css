@@ -498,6 +498,12 @@ body.in-section #home, body.in-section #scene { cursor: default; }
   color: var(--accent); font-size: 24px; line-height: 1; cursor: pointer; display: grid; place-items: center;
 }
 .qty-btn:hover { background: var(--accent); color: var(--accent-ink); }
+.qty-btn:disabled { opacity: 0.35; cursor: not-allowed; background: transparent; color: var(--accent); }
+.card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.card-stock { font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.05em; font-size: 16px; color: var(--paint); text-transform: uppercase; }
+.card-stock.out { color: var(--muted); }
+.card-stock.editing { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
+.stock-input { width: 92px; padding: 3px 6px; font: inherit; font-size: 15px; background: var(--bg); color: var(--text); border: 1px solid var(--line-strong); border-radius: 5px; color-scheme: dark; }
 .qty-n { min-width: 2ch; text-align: center; font-family: var(--font-ui); font-weight: 700; font-size: 22px; }
 .cart-bar {
   position: sticky; bottom: 12px; z-index: 2; margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center;

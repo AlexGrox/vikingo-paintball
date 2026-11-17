@@ -33,7 +33,7 @@ function renderBlock(b) {
     case 'text':
       return `<div class="rich">${b.html || ''}</div>`;
     case 'cards':
-      return `<div class="cards">${(b.items || []).map((it) => `<article class="card">${it.img ? `<div class="card-img"><img src="${esc(it.img)}" alt="${esc(it.title || '')}" loading="lazy" /></div>` : ''}<div class="card-body">${it.tag ? `<span class="card-tag">${esc(it.tag)}</span>` : ''}<h3>${esc(it.title)}</h3><p>${esc(it.text)}</p></div></article>`).join('')}</div>`;
+      return `<div class="cards">${(b.items || []).map((it) => `<article class="card">${it.img ? `<div class="card-img"><img src="${esc(it.img)}" alt="${esc(it.title || '')}" loading="lazy" /></div>` : ''}<div class="card-body">${it.tag ? `<span class="card-tag">${esc(it.tag)}</span>` : ''}${b.shop && it.stock !== '' && it.stock != null ? `<span class="card-stock">${Number(it.stock) > 0 ? `Stock: ${esc(it.stock)}` : 'Sin stock'}</span>` : ''}<h3>${esc(it.title)}</h3><p>${esc(it.text)}</p></div></article>`).join('')}</div>`;
     case 'table':
       return `<div class="table-wrap"><table class="data"><thead><tr>${(b.headers || []).map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${(b.rows || []).map((r) => `<tr>${(b.headers || []).map((_, i) => `<td>${esc(r[i] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     case 'image':

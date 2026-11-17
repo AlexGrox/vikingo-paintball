@@ -296,7 +296,7 @@ function getRegretSheet() {
 
 /* ---------- tienda: pedidos ---------- */
 const COLUMNAS_PED = ['Fecha', 'Código', 'Nombre', 'E-mail', 'Teléfono', 'Productos', 'Unidades', 'Total', 'Comentario', 'Estado'];
-const COLUMNAS_PROD = ['Producto', 'Precio', 'Descripción', 'Sección', 'ID', 'Actualizado'];
+const COLUMNAS_PROD = ['Producto', 'Precio', 'Stock', 'Descripción', 'Sección', 'ID', 'Actualizado'];
 
 function pedido(d) {
   const clip = (v, n) => String(v || '').trim().slice(0, n);
@@ -323,6 +323,12 @@ function pedido(d) {
   const byId = {};
   products.forEach((p) => (byId[p.id] = p));
   if (ids.some((id) => !byId[id])) return { ok: false, error: 'Algún producto cambió o ya no está. Recargá la página y armá el pedido de nuevo.' };
+  const short = ids.find((id) => byId[id].stock !== null && qty[id] > byId[id].stock);
+  if (short) {
+    const p = byId[short];
+    return { ok: false, error: p.stock === 0 ? '«' + p.title + '» está sin stock. Sacalo del pedido.'
+      : 'De «' + p.title + '» ' + (p.stock === 1 ? 'queda 1' : 'quedan ' + p.stock) + '. Ajustá la cantidad.' };
+  }
   const lines = ids.map((id) => ({ title: byId[id].title, price: byId[id].price, qty: qty[id], subtotal: byId[id].price * qty[id] }));
   const total = lines.reduce((s, l) => s + l.subtotal, 0);
   const units = lines.reduce((s, l) => s + l.qty, 0);
@@ -377,7 +383,10 @@ function shopProducts() {
       if (b.type !== 'cards' || !b.shop) return;
       (b.items || []).forEach((it) => {
         const price = parsePrice(it.tag);
-        if (it.id && it.title && price) list.push({ id: String(it.id), title: String(it.title).slice(0, 120), price: price, text: String(it.text || '').slice(0, 300), section: String(sec.label || key) });
+        // stock: número (0 = sin stock) o null si no tiene límite
+        const n = it.stock === '' || it.stock == null ? NaN : Math.floor(Number(it.stock));
+        const stock = isFinite(n) && n >= 0 ? n : null;
+        if (it.id && it.title && price) list.push({ id: String(it.id), title: String(it.title).slice(0, 120), price: price, stock: stock, text: String(it.text || '').slice(0, 300), section: String(sec.label || key) });
       });
     });
   });
@@ -403,11 +412,11 @@ function money(n) {
 function syncProducts(products) {
   const sh = getProductsSheet();
   const last = sh.getLastRow();
-  if (last > 1) sh.getRange(2, 1, last - 1, COLUMNAS_PROD.length).clearContent();
+  if (last > 1) sh.getRange(2, 1, last - 1, Math.max(COLUMNAS_PROD.length, sh.getLastColumn())).clearContent();
   if (!products.length) return;
   const now = new Date();
   sh.getRange(2, 1, products.length, COLUMNAS_PROD.length)
-    .setValues(products.map((p) => [cell(p.title), p.price, cell(p.text), cell(p.section), p.id, now]));
+    .setValues(products.map((p) => [cell(p.title), p.price, p.stock === null ? 'Sin límite' : p.stock, cell(p.text), cell(p.section), p.id, now]));
 }
 
 /** Ejecutalo a mano (botón ▶) si querés ver ya mismo los precios nuevos en la hoja «Productos» */
@@ -440,13 +449,16 @@ function getProductsSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(CONFIG.HOJA_PRODUCTOS);
   if (!sh) sh = ss.insertSheet(CONFIG.HOJA_PRODUCTOS);
-  if (sh.getLastRow() === 0) {
-    sh.appendRow(COLUMNAS_PROD);
-    sh.getRange(1, 1, 1, COLUMNAS_PROD.length).setFontWeight('bold').setBackground('#e8b13a');
+  // hoja nueva, o creada antes de agregar la columna «Stock»: se rearma el encabezado
+  const head = sh.getLastRow() === 0 ? [] : sh.getRange(1, 1, 1, COLUMNAS_PROD.length).getValues()[0];
+  if (head.join('|') !== COLUMNAS_PROD.join('|')) {
+    sh.getRange(1, 1, 1, COLUMNAS_PROD.length).setValues([COLUMNAS_PROD]).setFontWeight('bold').setBackground('#e8b13a');
     sh.setFrozenRows(1);
     sh.getRange('B:B').setNumberFormat('"$"#,##0');
-    sh.getRange('F:F').setNumberFormat('dd/MM/yyyy HH:mm');
-    sh.getRange('A1').setNote('Esta hoja se actualiza sola con la tienda de la web. Para cambiar productos o precios, editalos desde la web: los cambios hechos acá se pisan.');
+    sh.getRange('C:C').setNumberFormat('0');
+    sh.getRange('D:F').setNumberFormat('@');
+    sh.getRange('G:G').setNumberFormat('dd/MM/yyyy HH:mm');
+    sh.getRange('A1').setNote('Esta hoja se actualiza sola con la tienda de la web. Para cambiar productos, precios o stock, editalos desde la web: los cambios hechos acá se pisan.');
   }
   return sh;
 }
