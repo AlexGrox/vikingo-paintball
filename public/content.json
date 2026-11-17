@@ -282,6 +282,24 @@
               "link": "",
               "linkText": "Consultar",
               "id": "p500bolitas"
+            },
+            {
+              "img": "uploads/1794942592082-z4yuo3-whatsapp-image-2026-11-17-at-16-08-00-2.jpeg",
+              "title": "Máscaras termal Helik X2",
+              "tag": "$120000",
+              "text": "Dos máscaras termales usadas que no se empañan a un increíble precio.",
+              "link": "",
+              "linkText": "Consultar",
+              "id": "bmwl2gm2szxxz"
+            },
+            {
+              "img": "uploads/1794943376129-ymppc7-whatsapp-image-2026-11-17-at-16-11-17.jpeg",
+              "title": "Marcadora de Paintball Apocalipsis AN-AK47 (Full Metal)",
+              "tag": "$350000",
+              "text": "Marcadora con casi nada de uso, en excelentes condiciones, con un estilo único",
+              "link": "",
+              "linkText": "Consultar",
+              "id": "bmwl2o5w8jzby"
             }
           ],
           "shop": true
@@ -447,5 +465,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-12T14:18:27.756Z"
+  "updatedAt": "2026-11-17T19:27:32.353Z"
 }
