@@ -13,6 +13,13 @@ import { trackEvent } from './analytics.js';
 const CART_KEY = 'vp_cart';
 const MAX_QTY = 50;
 
+/** Error de conexión con el registro (caído, sin internet o sin DNS) */
+function offline() {
+  const e = new Error('No se pudo conectar.');
+  e.offline = true;
+  return e;
+}
+
 const money = (n) => '$' + Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
 /* ---------- carrito (queda guardado si se cambia de sección) ---------- */
@@ -147,13 +154,13 @@ function openOrder(b) {
     button.textContent = 'Enviando…';
     try {
       const url = String((store.content && store.content.site && store.content.site.voucherUrl) || '').trim();
-      if (!url) throw new Error('Los pedidos online todavía no están disponibles. Escribinos por WhatsApp.');
+      if (!url) throw offline();
       const res = await fetch(url, {
         method: 'POST', redirect: 'follow',
         body: JSON.stringify({ action: 'pedido', items: lines.map((l) => ({ id: l.id, qty: l.qty })), ...d }),
-      });
+      }).catch(() => { throw offline(); });
       const r = await res.json().catch(() => null);
-      if (!r) throw new Error('No se pudo conectar. Probá de nuevo en unos segundos.');
+      if (!r) throw offline();
       if (!r.ok || !r.code) throw new Error(r.error || 'No se pudo enviar el pedido.');
       cart = {};
       saveCart();
@@ -167,7 +174,17 @@ function openOrder(b) {
       button.hidden = true;
       cancel.textContent = 'Cerrar';
     } catch (e) {
-      show('err', e.message);
+      if (e.offline) {
+        // sin conexión con el registro: el mismo pedido, ya escrito, por WhatsApp
+        const site = (store.content && store.content.site) || {};
+        const wa = String(site.whatsapp || '').replace(/[^\d]/g, '');
+        const text = 'Hola, quiero hacer este pedido de la tienda:\n' +
+          lines.map((l) => `${l.qty} × ${l.title} = ${money(l.qty * l.price)}`).join('\n') +
+          `\nTotal: ${money(total)}\n\nNombre: ${d.nombre}\nTeléfono: ${d.telefono}\nE-mail: ${d.email}` + (d.nota ? `\nComentario: ${d.nota}` : '');
+        show('err',
+          el('p', {}, 'No pudimos conectar con el sistema de pedidos. Podés enviarnos este mismo pedido por WhatsApp:'),
+          wa ? el('p', {}, el('a.btn.small', { href: `https://wa.me/${wa}?text=${encodeURIComponent(text)}`, target: '_blank', rel: 'noopener' }, 'Enviar pedido por WhatsApp')) : null);
+      } else show('err', e.message);
       button.disabled = false;
       button.textContent = 'Enviar pedido';
     } finally {

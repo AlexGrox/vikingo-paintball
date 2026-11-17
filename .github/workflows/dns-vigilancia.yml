@@ -1,0 +1,22 @@
+# Revisa todos los días que el dominio siga apuntando a tu web y a tu correo.
+# Si algo cambia (o el dominio está por vencer), la revisión falla y GitHub te avisa por e-mail.
+name: Vigilancia del dominio
+
+on:
+  schedule:
+    - cron: '0 11 * * *' # 8:00 de Córdoba
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Revisar DNS, web y vencimiento
+        run: node tools/check-dns.mjs

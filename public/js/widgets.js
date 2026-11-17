@@ -2,7 +2,7 @@
    mapa del campo (pin de ubicación) y redes sociales (placas de la caja). */
 import { el, modal } from './ui.js';
 import { store } from './store.js';
-import { drawBadgeCanvas } from './links3d.js';
+import { drawBadgeCanvas } from './badges.js';
 
 const digits = (v) => String(v || '').replace(/[^\d]/g, '');
 

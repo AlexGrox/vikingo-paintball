@@ -124,6 +124,8 @@ body.in-section #legal-strip { display: none; }
 }
 #loader img { animation: spin-in 1.6s ease-in-out infinite alternate; }
 #loader.done { opacity: 0; pointer-events: none; }
+#loader span { text-align: center; }
+#loader a { color: var(--accent); }
 @keyframes spin-in { from { transform: scale(0.94) rotate(-4deg); } to { transform: scale(1.04) rotate(4deg); } }
 
 /* navegación alternativa: solo visible con foco de teclado o sin WebGL */

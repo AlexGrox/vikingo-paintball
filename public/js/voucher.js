@@ -139,7 +139,8 @@ async function api(action, data = {}) {
     return { ok: true, code: 'VK-PRUEBA' };
   }
   // text/plain evita la comprobación previa (CORS) que Apps Script no responde
-  const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action, ...data }), redirect: 'follow' });
+  const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action, ...data }), redirect: 'follow' })
+    .catch(() => { throw new Error('No se pudo conectar. Probá de nuevo en unos minutos.'); }); // registro caído o sin internet
   const json = await res.json().catch(() => null);
   if (!json) throw new Error('No se pudo conectar. Probá de nuevo en unos segundos.');
   return json;
