@@ -312,6 +312,16 @@
               "linkText": "Consultar",
               "id": "bmwl46uytnp1m",
               "stock": 7
+            },
+            {
+              "img": "uploads/1794946080377-v75kj0-gemini-generated-image-vulmtzvulmtzvulm.jfif",
+              "title": "Pantalón Táctico Anti desgarro",
+              "tag": "$50000",
+              "text": "Pantalón Táctico increíblemente resistente en color azul, talles M, L, XL y 2XL; ideal para usarlos en escenarios hostiles.",
+              "link": "",
+              "linkText": "Consultar",
+              "id": "bmwl4jphn8r7g",
+              "stock": 12
             }
           ],
           "shop": true
@@ -477,5 +487,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-17T20:05:16.140Z"
+  "updatedAt": "2026-11-17T20:09:06.562Z"
 }
