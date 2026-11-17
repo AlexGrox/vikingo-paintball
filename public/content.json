@@ -291,17 +291,27 @@
               "link": "",
               "linkText": "Consultar",
               "id": "bmwl2gm2szxxz",
-              "stock": 1
+              "stock": 1,
+              "photos": [
+                "uploads/1794947565641-womtja-whatsapp-image-2026-11-17-at-16-08-00-1.jpeg",
+                "uploads/1794947567646-via3oj-whatsapp-image-2026-11-17-at-16-08-00.jpeg"
+              ]
             },
             {
-              "img": "uploads/1794946348331-ws1s46-whatsapp-image-2026-11-17-at-17-04-06.jpeg",
+              "img": "uploads/1794947525598-5x8k6e-whatsapp-image-2026-11-17-at-17-29-58.jpeg",
               "title": "Marcadora de Paintball Apocalipsis AN-AK47 (Full Metal)",
               "tag": "$350000",
               "text": "Marcadora con casi nada de uso, en excelentes condiciones, con un estilo único",
               "link": "",
               "linkText": "Consultar",
               "id": "bmwl2o5w8jzby",
-              "stock": 1
+              "stock": 1,
+              "photos": [
+                "uploads/1794947539532-e807su-68ad4d84-666b-444a-9890-9490ccd865c3.jfif",
+                "uploads/1794947541479-kzfsoy-whatsapp-image-2026-11-17-at-17-04-06.jpeg",
+                "uploads/1794947543480-tbgqqw-whatsapp-image-2026-11-17-at-17-04-19.jpeg",
+                "uploads/1794947545155-0gtrke-whatsapp-image-2026-11-17-at-17-04-41.jpeg"
+              ]
             },
             {
               "img": "uploads/1794945737196-yr1fs8-gemini-generated-image-etmed6etmed6etme.jfif",
@@ -487,5 +497,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-17T20:13:14.763Z"
+  "updatedAt": "2026-11-17T20:34:16.522Z"
 }
