@@ -13,6 +13,9 @@
    «Estado» a «Canjeado».
    - Botón de arrepentimiento: cada solicitud queda en la hoja «Arrepentimientos» con
      un código (AR-XXXXXX) que se le envía al cliente; a vos te llega un aviso.
+   - Login con Google (si CONFIG.GOOGLE_CLIENT_ID tiene el ID de cliente): para jugar hay que
+     entrar con una cuenta de Google; las oportunidades del día se cuentan por cuenta en la
+     hoja «Partidas» y el voucher se envía a esa cuenta.
    ========================================================================== */
 
 const CONFIG = {
@@ -29,6 +32,11 @@ const CONFIG = {
   ZONA: 'America/Argentina/Cordoba',
   HOJA_ARREPENTIMIENTOS: 'Arrepentimientos',
   MAX_ARREPENTIMIENTOS_POR_DIA: 15, // frena abusos (cada solicitud envía dos e-mails)
+  // Login con Google antes de jugar: pegá acá el «ID de cliente» de Google Cloud
+  // (termina en .apps.googleusercontent.com). Vacío = se juega sin login, como antes.
+  GOOGLE_CLIENT_ID: '1002465928516-op1k286mjvh9h5vfde0n41dcmnpnrod5.apps.googleusercontent.com',
+  INTENTOS_POR_DIA: 3,           // oportunidades por cuenta de Google y por día (con login)
+  HOJA_PARTIDAS: 'Partidas',     // una fila por partida empezada (se limpia sola: guarda 8 días)
 };
 
 const COLUMNAS = ['Fecha', 'Código', 'E-mail', 'Premio', 'Vence', 'Aciertos', 'Segundos de juego', 'Dispositivo', 'Estado', 'Inicio de la partida', 'ID del dispositivo'];
@@ -45,33 +53,123 @@ function doPost(e) {
   } catch (err) {
     return out({ ok: false, error: 'Solicitud no válida.' });
   }
+  if (data.action === 'hello') return out({ ok: true, clientId: CONFIG.GOOGLE_CLIENT_ID || '', tries: CONFIG.INTENTOS_POR_DIA });
+  if (data.action === 'login') return out(login(data));
   if (data.action === 'start') return out(start(data));
   if (data.action === 'claim') return out(claim(data));
   if (data.action === 'arrepentimiento') return out(arrepentimiento(data));
   return out({ ok: false, error: 'Acción desconocida.' });
 }
 
+/* ---------- login con Google ---------- */
+/** Comprueba con Google que el «credential» del botón sea auténtico y de esta web */
+function verifyGoogle(idToken) {
+  if (!CONFIG.GOOGLE_CLIENT_ID || !idToken) return null;
+  const res = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(String(idToken)), { muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) return null;
+  const t = JSON.parse(res.getContentText());
+  const okIss = t.iss === 'accounts.google.com' || t.iss === 'https://accounts.google.com';
+  const verified = t.email_verified === true || t.email_verified === 'true';
+  if (t.aud !== CONFIG.GOOGLE_CLIENT_ID || !okIss || !verified || Number(t.exp) * 1000 < Date.now() || !t.email) return null;
+  return { email: String(t.email).toLowerCase(), name: String(t.given_name || t.name || '').slice(0, 60) };
+}
+
+/** Cuántas partidas empezó hoy esa cuenta */
+function triesToday(email) {
+  const today = fmt(new Date(), 'yyyy-MM-dd');
+  return getPlaysSheet().getDataRange().getValues().slice(1)
+    .filter((r) => r[0] instanceof Date && fmt(r[0], 'yyyy-MM-dd') === today && String(r[1]).toLowerCase() === email).length;
+}
+
+/** Estado de juego de una cuenta: oportunidades que le quedan hoy y si ganó esta semana */
+function playerStatus(email) {
+  const last = lastWin(getSheet().getDataRange().getValues().slice(1), (r) => String(r[2]).toLowerCase() === email);
+  return {
+    left: Math.max(0, CONFIG.INTENTOS_POR_DIA - triesToday(email)),
+    nextPlay: last ? fmt(nextPlay(last), 'dd/MM') : '',
+  };
+}
+
+function login(d) {
+  const user = verifyGoogle(d.idToken);
+  if (!user) return { ok: false, error: 'No se pudo verificar tu cuenta de Google. Probá de nuevo.' };
+  const sid = Utilities.getUuid();
+  CacheService.getScriptCache().put('s_' + sid, user.email, 21600); // la sesión vale 6 horas
+  const st = playerStatus(user.email);
+  return { ok: true, sid: sid, email: user.email, name: user.name, left: st.left, nextPlay: st.nextPlay };
+}
+
 /* ---------- permiso de partida ---------- */
 function start(d) {
+  const cache = CacheService.getScriptCache();
+  let email = '';
+  if (CONFIG.GOOGLE_CLIENT_ID) {
+    // con login: la cuenta manda (el modo incógnito o borrar datos no da más oportunidades)
+    email = cache.get('s_' + d.sid) || '';
+    if (!email) return { ok: false, error: 'Tu sesión venció. Volvé a entrar con Google.', relogin: true };
+    const lock = LockService.getScriptLock();
+    lock.waitLock(15000);
+    try {
+      const st = playerStatus(email);
+      if (email === ownerEmail()) st.nextPlay = '', st.left = Math.max(st.left, 1); // vos podés probar sin límites
+      if (st.nextPlay) return { ok: false, error: 'Ya ganaste un voucher esta semana. Podés volver a jugar desde el ' + st.nextPlay + '.' };
+      if (st.left <= 0) return { ok: false, error: 'Ya usaste tus ' + CONFIG.INTENTOS_POR_DIA + ' oportunidades de hoy. Volvé mañana.', left: 0 };
+      getPlaysSheet().appendRow([new Date(), cell(email), cell(String(d.deviceId || '').slice(0, 20))]);
+      const token = Utilities.getUuid();
+      cache.put('t_' + token, JSON.stringify({ at: Date.now(), email: email }), 21600); // vale 6 horas
+      return { ok: true, token: token, left: st.left - 1 };
+    } finally {
+      lock.releaseLock();
+    }
+  }
   const deviceId = String(d.deviceId || '').slice(0, 20);
   const last = deviceId && lastWin(getSheet().getDataRange().getValues().slice(1), (r) => r[10] === deviceId);
   if (last) return { ok: false, error: 'Ya ganaste un voucher esta semana. Podés volver a jugar desde el ' + fmt(nextPlay(last), 'dd/MM') + '.' };
   const token = Utilities.getUuid();
-  CacheService.getScriptCache().put('t_' + token, String(Date.now()), 21600); // vale 6 horas
+  cache.put('t_' + token, JSON.stringify({ at: Date.now(), email: '' }), 21600); // vale 6 horas
   return { ok: true, token: token };
+}
+
+function getPlaysSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(CONFIG.HOJA_PARTIDAS);
+  if (!sh) sh = ss.insertSheet(CONFIG.HOJA_PARTIDAS);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(['Fecha', 'E-mail', 'ID del dispositivo']);
+    sh.getRange(1, 1, 1, 3).setFontWeight('bold').setBackground('#e8b13a');
+    sh.setFrozenRows(1);
+    sh.getRange('A:A').setNumberFormat('dd/MM/yyyy HH:mm');
+  }
+  return sh;
+}
+
+/** Borra las partidas de hace más de 8 días (solo sirven para contar las oportunidades del día) */
+function limpiarPartidas() {
+  const sh = getPlaysSheet();
+  const last = sh.getLastRow();
+  if (last < 2) return;
+  const limite = Date.now() - 8 * 86400000;
+  const fechas = sh.getRange(2, 1, last - 1, 1).getValues();
+  let viejas = 0;
+  while (viejas < fechas.length && fechas[viejas][0] instanceof Date && fechas[viejas][0].getTime() < limite) viejas++;
+  if (viejas) sh.deleteRows(2, viejas);
 }
 
 /* ---------- reclamar el voucher ---------- */
 function claim(d) {
-  const email = String(d.email || '').trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Revisá el e-mail: parece que le falta algo.' };
-
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {
     const cache = CacheService.getScriptCache();
-    const started = Number(cache.get('t_' + d.token));
+    let t = null;
+    try { t = JSON.parse(cache.get('t_' + d.token) || 'null'); } catch (err) { t = null; }
+    if (typeof t === 'number') t = { at: t, email: '' }; // permisos emitidos antes del login
+    const started = t && Number(t.at);
     if (!started) return { ok: false, error: 'La partida venció o no es válida. Volvé a intentarlo desde la web.' };
+    // con login, el voucher va a la cuenta de Google con la que se jugó (no a un e-mail escrito a mano)
+    const email = t.email || String(d.email || '').trim().toLowerCase();
+    if (CONFIG.GOOGLE_CLIENT_ID && !t.email) return { ok: false, error: 'La partida no es válida. Volvé a intentarlo desde la web.' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Revisá el e-mail: parece que le falta algo.' };
     if (Date.now() - started < CONFIG.MIN_SEGUNDOS * 1000) return { ok: false, error: 'Partida no válida.' };
 
     // las pruebas (sin límites) solo valen con el e-mail de la cuenta dueña: así nadie puede saltarse las reglas
@@ -293,6 +391,7 @@ function marcarVencidos() {
     }
   });
   Logger.log('Vouchers marcados como vencidos: ' + cambios);
+  limpiarPartidas(); // la revisión diaria también borra las partidas viejas
 }
 
 /** Ejecutalo una vez a mano (botón ▶): revisa los vencimientos todos los días a la madrugada. */
@@ -309,5 +408,7 @@ function activarRevisionDiaria() {
 function prepararHoja() {
   getSheet();
   getRegretSheet();
+  getPlaysSheet();
+  if (CONFIG.GOOGLE_CLIENT_ID) UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=x', { muteHttpExceptions: true }); // pide el permiso para consultar a Google
   Logger.log('Hoja lista. Avisos a: ' + (CONFIG.AVISAR_A || Session.getEffectiveUser().getEmail()));
 }

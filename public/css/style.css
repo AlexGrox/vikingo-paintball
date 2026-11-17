@@ -268,6 +268,12 @@ body.in-section #voucher-btn, body.in-section #voucher-hud { display: none; }
 .voucher-form .form-grid, .voucher-form .field { margin-bottom: 6px; }
 .voucher-err { color: var(--danger); min-height: 1.3em; margin: 4px 0 6px; font-size: 15px; }
 .voucher-code { font-family: var(--font-ui); font-size: 26px; letter-spacing: .12em; color: var(--accent); }
+/* login con Google antes de jugar */
+.gsi-slot { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 48px; margin: 10px 0 6px; }
+.gsi-slot p { text-align: center; }
+.gsi-btn { min-height: 44px; }
+.voucher-account { font-size: 15px !important; color: var(--muted, #bba98a); word-break: break-word; }
+.linklike { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
 @media (max-width: 760px) {
   #voucher-btn { font-size: 16px; padding: 9px 18px 9px 13px; }
 }
