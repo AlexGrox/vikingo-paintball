@@ -16,6 +16,10 @@
    - Login con Google (si CONFIG.GOOGLE_CLIENT_ID tiene el ID de cliente): para jugar hay que
      entrar con una cuenta de Google; las oportunidades del día se cuentan por cuenta en la
      hoja «Partidas» y el voucher se envía a esa cuenta.
+   - Pedidos de la tienda: el total se recalcula con los precios publicados en la web
+     (content.json), el pedido queda en la hoja «Pedidos» con un código (PD-XXXXXX), el
+     cliente recibe la confirmación y a vos te llega el pedido. La hoja «Productos» copia
+     la lista de la tienda (los precios se cambian desde la web).
    ========================================================================== */
 
 const CONFIG = {
@@ -37,6 +41,12 @@ const CONFIG = {
   GOOGLE_CLIENT_ID: '1002465928516-op1k286mjvh9h5vfde0n41dcmnpnrod5.apps.googleusercontent.com',
   INTENTOS_POR_DIA: 3,           // oportunidades por cuenta de Google y por día (con login)
   HOJA_PARTIDAS: 'Partidas',     // una fila por partida empezada (se limpia sola: guarda 8 días)
+  // Tienda
+  SITIO: 'https://www.vikingo-paintball.com', // de acá se leen los productos y precios publicados
+  HOJA_PEDIDOS: 'Pedidos',
+  HOJA_PRODUCTOS: 'Productos',   // copia de la tienda de la web (se actualiza sola)
+  MAX_PEDIDOS_POR_DIA: 30,       // frena abusos (cada pedido envía dos e-mails)
+  MAX_UNIDADES: 50,              // por producto en un pedido
 };
 
 const COLUMNAS = ['Fecha', 'Código', 'E-mail', 'Premio', 'Vence', 'Aciertos', 'Segundos de juego', 'Dispositivo', 'Estado', 'Inicio de la partida', 'ID del dispositivo'];
@@ -58,6 +68,7 @@ function doPost(e) {
   if (data.action === 'start') return out(start(data));
   if (data.action === 'claim') return out(claim(data));
   if (data.action === 'arrepentimiento') return out(arrepentimiento(data));
+  if (data.action === 'pedido') return out(pedido(data));
   return out({ ok: false, error: 'Acción desconocida.' });
 }
 
@@ -283,6 +294,194 @@ function getRegretSheet() {
   return sh;
 }
 
+/* ---------- tienda: pedidos ---------- */
+const COLUMNAS_PED = ['Fecha', 'Código', 'Nombre', 'E-mail', 'Teléfono', 'Productos', 'Unidades', 'Total', 'Comentario', 'Estado'];
+const COLUMNAS_PROD = ['Producto', 'Precio', 'Descripción', 'Sección', 'ID', 'Actualizado'];
+
+function pedido(d) {
+  const clip = (v, n) => String(v || '').trim().slice(0, n);
+  const nombre = clip(d.nombre, 120), email = clip(d.email, 160).toLowerCase();
+  const telefono = clip(d.telefono, 40), nota = clip(d.nota, 500);
+  if (!nombre) return { ok: false, error: 'Completá tu nombre y apellido.' };
+  if (!telefono) return { ok: false, error: 'Dejanos un teléfono para coordinar.' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Revisá el e-mail: parece que le falta algo.' };
+
+  // cantidades pedidas (se juntan si un producto viene repetido)
+  const qty = {};
+  (Array.isArray(d.items) ? d.items : []).slice(0, 40).forEach((it) => {
+    const id = String((it && it.id) || '').slice(0, 40), q = Math.floor(Number(it && it.qty));
+    if (id && q > 0) qty[id] = (qty[id] || 0) + q;
+  });
+  const ids = Object.keys(qty);
+  if (!ids.length) return { ok: false, error: 'Elegí al menos un producto.' };
+  if (ids.some((id) => qty[id] > CONFIG.MAX_UNIDADES)) return { ok: false, error: 'Para más de ' + CONFIG.MAX_UNIDADES + ' unidades de un producto, escribinos por WhatsApp.' };
+
+  // precios publicados en la web: el total nunca sale de lo que manda el navegador
+  let products;
+  try { products = shopProducts(); } catch (err) { products = null; }
+  if (!products) return { ok: false, error: 'No se pudo cargar la lista de productos. Probá de nuevo en un rato o escribinos por WhatsApp.' };
+  const byId = {};
+  products.forEach((p) => (byId[p.id] = p));
+  if (ids.some((id) => !byId[id])) return { ok: false, error: 'Algún producto cambió o ya no está. Recargá la página y armá el pedido de nuevo.' };
+  const lines = ids.map((id) => ({ title: byId[id].title, price: byId[id].price, qty: qty[id], subtotal: byId[id].price * qty[id] }));
+  const total = lines.reduce((s, l) => s + l.subtotal, 0);
+  const units = lines.reduce((s, l) => s + l.qty, 0);
+  const detalle = lines.map((l) => l.qty + ' × ' + l.title + ' (' + money(l.price) + ' c/u) = ' + money(l.subtotal)).join(NL);
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  let code;
+  const now = new Date();
+  try {
+    const sheet = getOrdersSheet();
+    const rows = sheet.getDataRange().getValues().slice(1);
+    const today = fmt(now, 'yyyy-MM-dd');
+    const todayCount = rows.filter((r) => r[0] instanceof Date && fmt(r[0], 'yyyy-MM-dd') === today).length;
+    if (todayCount >= CONFIG.MAX_PEDIDOS_POR_DIA) return { ok: false, error: 'No se pudo registrar el pedido. Escribinos por WhatsApp.' };
+    const used = new Set(rows.map((r) => r[1]));
+    do code = 'PD-' + randomCode(6); while (used.has(code));
+    sheet.appendRow([now, code, cell(nombre), cell(email), cell(telefono), cell(detalle), units, total, cell(nota), 'Pendiente']);
+  } finally {
+    lock.releaseLock();
+  }
+  try { syncProducts(products); } catch (err) { /* la copia de productos no frena el pedido */ }
+
+  sendOrderToClient(email, code, lines, total, now);
+  const to = CONFIG.AVISAR_A || Session.getEffectiveUser().getEmail();
+  if (to) {
+    MailApp.sendEmail({
+      to: to,
+      subject: 'Nuevo pedido de la tienda: ' + code + ' · ' + money(total),
+      body: ['Nuevo pedido en la tienda de la web.', '',
+        'Código: ' + code, 'Fecha: ' + fmt(now, 'dd/MM/yyyy HH:mm'), '',
+        'Nombre: ' + nombre, 'E-mail: ' + email, 'Teléfono: ' + telefono, '',
+        detalle, '', 'Unidades: ' + units, 'TOTAL: ' + money(total),
+        nota ? NL + 'Comentario: ' + nota : '', '',
+        'Queda anotado en la hoja «' + CONFIG.HOJA_PEDIDOS + '». Respondé al cliente (podés contestar este e-mail) y cambiá «Estado» cuando lo confirmes o entregues.'].join(NL),
+      replyTo: email,
+    });
+  }
+  return { ok: true, code: code, total: total, units: units };
+}
+
+/** Productos con precio de los bloques de tarjetas con «Pedidos online» activado */
+function shopProducts() {
+  const res = UrlFetchApp.fetch(CONFIG.SITIO + '/content.json?t=' + Date.now(), { muteHttpExceptions: true, followRedirects: true });
+  if (res.getResponseCode() !== 200) return null;
+  const content = JSON.parse(res.getContentText());
+  const list = [];
+  const sections = content.sections || {};
+  (content.order || Object.keys(sections)).forEach((key) => {
+    const sec = sections[key];
+    ((sec && sec.blocks) || []).forEach((b) => {
+      if (b.type !== 'cards' || !b.shop) return;
+      (b.items || []).forEach((it) => {
+        const price = parsePrice(it.tag);
+        if (it.id && it.title && price) list.push({ id: String(it.id), title: String(it.title).slice(0, 120), price: price, text: String(it.text || '').slice(0, 300), section: String(sec.label || key) });
+      });
+    });
+  });
+  return list;
+}
+
+/** «$10.000» → 10000 (acepta 10.000 / 10,000 / 1.500,50), igual que la web */
+function parsePrice(tag) {
+  const m = String(tag || '').match(/\$\s*([\d.,]+)/);
+  if (!m) return 0;
+  let n = m[1].replace(/[.,]$/, '');
+  if (/^\d{1,3}([.,]\d{3})+$/.test(n)) n = n.replace(/[.,]/g, '');
+  else n = n.replace(/\./g, '').replace(',', '.');
+  const price = Number(n);
+  return isFinite(price) && price > 0 ? price : 0;
+}
+
+function money(n) {
+  return '$' + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+/** Copia la lista de la tienda a la hoja «Productos» */
+function syncProducts(products) {
+  const sh = getProductsSheet();
+  const last = sh.getLastRow();
+  if (last > 1) sh.getRange(2, 1, last - 1, COLUMNAS_PROD.length).clearContent();
+  if (!products.length) return;
+  const now = new Date();
+  sh.getRange(2, 1, products.length, COLUMNAS_PROD.length)
+    .setValues(products.map((p) => [cell(p.title), p.price, cell(p.text), cell(p.section), p.id, now]));
+}
+
+/** Ejecutalo a mano (botón ▶) si querés ver ya mismo los precios nuevos en la hoja «Productos» */
+function actualizarProductos() {
+  const products = shopProducts();
+  if (!products) throw new Error('No se pudo leer la web (' + CONFIG.SITIO + ').');
+  syncProducts(products);
+  Logger.log('Productos actualizados: ' + products.length);
+}
+
+function getOrdersSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(CONFIG.HOJA_PEDIDOS);
+  if (!sh) sh = ss.insertSheet(CONFIG.HOJA_PEDIDOS);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(COLUMNAS_PED);
+    sh.getRange(1, 1, 1, COLUMNAS_PED.length).setFontWeight('bold').setBackground('#e8b13a');
+    sh.setFrozenRows(1);
+    sh.getRange('A:A').setNumberFormat('dd/MM/yyyy HH:mm');
+    sh.getRange('H:H').setNumberFormat('"$"#,##0');
+    sh.getRange('F:F').setWrap(true);
+    sh.setColumnWidth(6, 320);
+    const estados = SpreadsheetApp.newDataValidation().requireValueInList(['Pendiente', 'Confirmado', 'Entregado', 'Cancelado'], true).build();
+    sh.getRange('J2:J').setDataValidation(estados);
+  }
+  return sh;
+}
+
+function getProductsSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(CONFIG.HOJA_PRODUCTOS);
+  if (!sh) sh = ss.insertSheet(CONFIG.HOJA_PRODUCTOS);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(COLUMNAS_PROD);
+    sh.getRange(1, 1, 1, COLUMNAS_PROD.length).setFontWeight('bold').setBackground('#e8b13a');
+    sh.setFrozenRows(1);
+    sh.getRange('B:B').setNumberFormat('"$"#,##0');
+    sh.getRange('F:F').setNumberFormat('dd/MM/yyyy HH:mm');
+    sh.getRange('A1').setNote('Esta hoja se actualiza sola con la tienda de la web. Para cambiar productos o precios, editalos desde la web: los cambios hechos acá se pisan.');
+  }
+  return sh;
+}
+
+function sendOrderToClient(email, code, lines, total, now) {
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // al cliente no se le repite lo que escribió (nombre, comentario): así nadie puede usar
+  // el formulario para mandar mensajes propios a otras personas desde tu cuenta
+  const rowsHtml = lines.map((l) =>
+    '<tr><td style="padding:6px 4px;border-bottom:1px solid #4a3a28">' + l.qty + ' × ' + esc(l.title) + '</td>' +
+    '<td style="padding:6px 4px;border-bottom:1px solid #4a3a28;text-align:right;white-space:nowrap">' + money(l.subtotal) + '</td></tr>').join('');
+  const html =
+    '<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;background:#1a120b;color:#f3e6c8;border-radius:14px;padding:28px;border:2px solid #e8b13a">' +
+    '<h1 style="margin:0 0 6px;color:#ffd34d;font-size:26px">Recibimos tu pedido</h1>' +
+    '<p style="font-size:16px;margin:0 0 16px">Gracias por tu pedido en Vikingo Paintball Córdoba. Código: <b style="color:#ffd34d">' + code + '</b></p>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:15px;color:#f3e6c8">' + rowsHtml +
+    '<tr><td style="padding:10px 4px;font-weight:bold;color:#ffd34d">Total</td><td style="padding:10px 4px;text-align:right;font-weight:bold;color:#ffd34d">' + money(total) + '</td></tr></table>' +
+    '<p style="font-size:15px;margin:16px 0 8px">Pronto te vamos a responder para confirmar tu pedido y coordinar la entrega. Los productos se retiran en el campo.</p>' +
+    '<p style="font-size:14px;color:#bba98a;margin:0">WhatsApp: ' + CONFIG.WHATSAPP + ' · Si no hiciste este pedido, ignorá este mensaje.</p>' +
+    '</div>';
+  MailApp.sendEmail({
+    to: email,
+    subject: 'Recibimos tu pedido: ' + code,
+    htmlBody: html,
+    body: ['Hola:', '', 'Recibimos tu pedido en Vikingo Paintball Córdoba.', '',
+      'Código: ' + code, 'Fecha: ' + fmt(now, 'dd/MM/yyyy HH:mm'), '',
+      lines.map((l) => l.qty + ' × ' + l.title + ' = ' + money(l.subtotal)).join(NL), '',
+      'Total: ' + money(total), '',
+      'Pronto te vamos a responder para confirmar tu pedido y coordinar la entrega. Los productos se retiran en el campo.',
+      'Si no hiciste este pedido, ignorá este mensaje.', '',
+      'WhatsApp: ' + CONFIG.WHATSAPP, 'Vikingo Paintball Córdoba'].join(NL),
+    name: 'Vikingo Paintball',
+  });
+}
+
 /* ---------- e-mails ---------- */
 function sendVoucher(email, code, vence, test) {
   const html =
@@ -392,6 +591,7 @@ function marcarVencidos() {
   });
   Logger.log('Vouchers marcados como vencidos: ' + cambios);
   limpiarPartidas(); // la revisión diaria también borra las partidas viejas
+  try { actualizarProductos(); } catch (err) { Logger.log(err.message); } // y copia los precios de la tienda
 }
 
 /** Ejecutalo una vez a mano (botón ▶): revisa los vencimientos todos los días a la madrugada. */
@@ -409,6 +609,8 @@ function prepararHoja() {
   getSheet();
   getRegretSheet();
   getPlaysSheet();
+  getOrdersSheet();
+  try { actualizarProductos(); } catch (err) { getProductsSheet(); Logger.log(err.message); }
   if (CONFIG.GOOGLE_CLIENT_ID) UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=x', { muteHttpExceptions: true }); // pide el permiso para consultar a Google
   Logger.log('Hoja lista. Avisos a: ' + (CONFIG.AVISAR_A || Session.getEffectiveUser().getEmail()));
 }

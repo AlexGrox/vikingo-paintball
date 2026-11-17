@@ -7,6 +7,7 @@ import { store, uploadFile, sendReserva, uid } from './store.js';
 import { mediaUrl } from './media.js';
 import { renderGForm, GFORM_DEFAULT } from './gform.js';
 import { renderRegret, REGRET_DEFAULT } from './legal.js';
+import { renderShop, ensureIds } from './shop.js';
 
 /* ---------- Quill (editor de texto enriquecido), carga bajo demanda ---------- */
 let quillPromise = null;
@@ -251,6 +252,7 @@ export const BLOCK_TYPES = {
     create: () => ({ type: 'cards', items: [{ img: '', title: 'Título', tag: '', text: 'Descripción', link: '', linkText: '' }] }),
     render(b, ctx) {
       const grid = el('div.cards');
+      if (ctx.editing && ensureIds(b, uid)) ctx.changed(); // tienda: cada producto con su identificador
       b.items.forEach((it, i) => {
         const media = el('div.card-img', {}, it.img ? el('img', { src: mediaUrl(it.img), alt: it.title || '', loading: 'lazy' }) : el('div.noimg', {}, icon('image', 48)));
         if (!it.img && !ctx.editing) media.hidden = true;
@@ -300,7 +302,21 @@ export const BLOCK_TYPES = {
           type: 'button',
           onclick: () => { b.items.push({ img: '', title: 'Nueva tarjeta', tag: '', text: '', link: '', linkText: '' }); ctx.changed(); ctx.rerender(); },
         }, el('span', {}, icon('plus', 28), el('br'), 'Añadir tarjeta')));
+        return el('div', {}, grid, el('div.edit-row', {},
+          btn(b.shop ? '🛒 Pedidos online: activados' : '🛒 Activar pedidos online', async () => {
+            const r = await formDialog({
+              title: 'Pedidos online',
+              values: b,
+              fields: [{
+                key: 'shop', type: 'checkbox',
+                label: 'Los visitantes pueden elegir cantidades y enviar un pedido',
+                help: 'Solo las tarjetas con precio en la etiqueta (por ejemplo «$10.000») se pueden pedir. El pedido te llega por e-mail y queda en la hoja «Pedidos».',
+              }],
+            });
+            if (r) { b.shop = r.shop; ctx.changed(); ctx.rerender(); }
+          }, 'ghost')));
       }
+      if (b.shop) return renderShop(b, grid);
       return grid;
     },
   },
