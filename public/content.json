@@ -290,7 +290,8 @@
               "text": "Dos máscaras termales usadas que no se empañan a un increíble precio.",
               "link": "",
               "linkText": "Consultar",
-              "id": "bmwl2gm2szxxz"
+              "id": "bmwl2gm2szxxz",
+              "stock": 1
             },
             {
               "img": "uploads/1794943376129-ymppc7-whatsapp-image-2026-11-17-at-16-11-17.jpeg",
@@ -299,7 +300,18 @@
               "text": "Marcadora con casi nada de uso, en excelentes condiciones, con un estilo único",
               "link": "",
               "linkText": "Consultar",
-              "id": "bmwl2o5w8jzby"
+              "id": "bmwl2o5w8jzby",
+              "stock": 1
+            },
+            {
+              "img": "uploads/1794945737196-yr1fs8-gemini-generated-image-etmed6etmed6etme.jfif",
+              "title": "Pantalón Táctico Anti desgarro",
+              "tag": "$50000",
+              "text": "Pantalón Táctico increíblemente resistente en color negro , ideal para usarlos en escenarios hostiles.",
+              "link": "",
+              "linkText": "Consultar",
+              "id": "bmwl46uytnp1m",
+              "stock": 7
             }
           ],
           "shop": true
@@ -465,5 +477,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-17T19:33:56.803Z"
+  "updatedAt": "2026-11-17T20:04:04.630Z"
 }
