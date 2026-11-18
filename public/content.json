@@ -258,7 +258,7 @@
     "tienda": {
       "label": "TIENDA",
       "title": "Tienda",
-      "subtitle": "Bolas, equipamiento y merchandising de la horda.",
+      "subtitle": "Equípate en la tienda de Vikingo Paintball con los mejores productos",
       "cover": "",
       "blocks": [
         {
@@ -497,5 +497,5 @@
       ]
     }
   },
-  "updatedAt": "2026-11-17T20:34:16.522Z"
+  "updatedAt": "2026-11-18T11:51:30.997Z"
 }
