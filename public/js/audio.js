@@ -183,10 +183,15 @@ export function startMusic() {
   musicWanted = true;
   playMusic();
 }
-function stopMusic() {
+function stopMusic(ms = 400) {
   musicWanted = false;
   disarmMusic();
-  fadeMusic(0, 400, () => { if (!musicWanted && music) music.pause(); });
+  fadeMusic(0, ms, () => { if (!musicWanted && music) music.pause(); });
+}
+/** Termina la música con un fundido (al acabar la partida del voucher); la próxima partida la vuelve a empezar */
+export function endMusic() {
+  musicStarted = false;
+  stopMusic(1800);
 }
 // con la pestaña oculta no debe seguir sonando
 document.addEventListener('visibilitychange', () => {

@@ -812,7 +812,8 @@ table.data.editing-table td:focus, table.data.editing-table th:focus { outline: 
 .toast.err { border-color: var(--danger); }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  /* una sola vuelta: con 0,01 ms las animaciones infinitas (latido del botón, logo de carga) parpadearían */
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
 /* ---------- Móvil: el desenfoque de fondo (efecto cristal) sobre el 3D en movimiento es muy costoso ---------- */

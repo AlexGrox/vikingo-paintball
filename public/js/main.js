@@ -5,7 +5,7 @@ import { store, loadContent, checkSession, subscribe } from './store.js';
 import { el, icon, toast } from './ui.js';
 import { renderSection, renderTabs } from './sections.js';
 import { initAdmin, openLogin, renderBar } from './admin.js';
-import { isMuted, setMuted, startMusic } from './audio.js';
+import { isMuted, setMuted, startMusic, endMusic } from './audio.js';
 import { mediaUrl } from './media.js';
 import { openLinkWidget } from './widgets.js';
 import { updatePriceData } from './seo.js';
@@ -309,7 +309,7 @@ async function start() {
       walkMode?.begin(); // al jugar por el voucher se puede caminar por el campo
       startMusic(); // y suena el tema de Vikingo (no antes: la página abre en silencio)
     },
-    onEnd: () => walkMode?.end(),
+    onEnd: () => { walkMode?.end(); endMusic(); }, // termina el recorrido y la música
   });
 
   // resumen de disparos de la visita: un solo evento al salir o cambiar de pestaña (no uno por disparo)
