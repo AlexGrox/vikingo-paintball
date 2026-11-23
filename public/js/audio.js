@@ -130,8 +130,71 @@ export function playWhoosh(pan = 0, volume = 1) {
   src.stop(t + dur + 0.05);
 }
 
+/* ---------- Música de fondo (tema de Vikingo) ----------
+   Los navegadores no dejan sonar nada con volumen hasta que la persona toca la página: se
+   intenta al abrir y, si lo bloquean, arranca sola con el primer toque, clic o tecla. */
+const MUSIC_URL = 'audio/Musica_Vikingo.mp3';
+const MUSIC_VOL = 0.5;
+let music = null;
+let musicWanted = false; // la música debe estar sonando (no silenciada)
+let fadeTimer = 0;
+const UNLOCK_EVENTS = ['pointerup', 'touchend', 'keydown']; // los que el navegador cuenta como «toque de la persona»
+
+function fadeMusic(to, ms, done) {
+  clearInterval(fadeTimer);
+  if (!music) return;
+  const from = music.volume;
+  const t0 = performance.now();
+  fadeTimer = setInterval(() => {
+    const k = Math.min(1, (performance.now() - t0) / ms);
+    try { music.volume = from + (to - from) * k; } catch { /* iOS: el volumen lo fija el sistema */ }
+    if (k >= 1) { clearInterval(fadeTimer); done && done(); }
+  }, 50);
+}
+
+function onUnlock(e) {
+  if (e.type === 'keydown' && e.key === 'Escape') return;
+  disarmMusic();
+  if (musicWanted && !muted) playMusic();
+}
+function armMusic() { UNLOCK_EVENTS.forEach((t) => addEventListener(t, onUnlock, true)); }
+function disarmMusic() { UNLOCK_EVENTS.forEach((t) => removeEventListener(t, onUnlock, true)); }
+
+function playMusic() {
+  if (!music) {
+    music = new Audio(MUSIC_URL);
+    music.loop = true;
+    music.preload = 'auto';
+    music.volume = 0;
+  }
+  let p;
+  try { p = music.play(); } catch { p = Promise.reject(); }
+  Promise.resolve(p).then(
+    () => { if (musicWanted && !muted) fadeMusic(MUSIC_VOL, 2500); else music.pause(); },
+    () => { if (musicWanted && !muted) armMusic(); } // bloqueada hasta que la persona toque la página
+  );
+}
+
+/** Empieza (o retoma) la música, salvo que el sonido esté silenciado */
+export function startMusic() {
+  if (muted) return;
+  musicWanted = true;
+  playMusic();
+}
+function stopMusic() {
+  musicWanted = false;
+  disarmMusic();
+  fadeMusic(0, 400, () => { if (!musicWanted && music) music.pause(); });
+}
+// con la pestaña oculta no debe seguir sonando
+document.addEventListener('visibilitychange', () => {
+  if (!music || !musicWanted || muted) return;
+  if (document.hidden) music.pause(); else playMusic();
+});
+
 export function isMuted() { return muted; }
 export function setMuted(v) {
   muted = v;
   try { localStorage.setItem('vp_muted', v ? '1' : '0'); } catch { /* */ }
+  if (v) stopMusic(); else startMusic();
 }

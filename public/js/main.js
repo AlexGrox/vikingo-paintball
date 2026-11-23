@@ -5,10 +5,11 @@ import { store, loadContent, checkSession, subscribe } from './store.js';
 import { el, icon, toast } from './ui.js';
 import { renderSection, renderTabs } from './sections.js';
 import { initAdmin, openLogin, renderBar } from './admin.js';
-import { isMuted, setMuted } from './audio.js';
+import { isMuted, setMuted, startMusic } from './audio.js';
 import { mediaUrl } from './media.js';
 import { openLinkWidget } from './widgets.js';
 import { updatePriceData } from './seo.js';
+import { initWalk } from './walk.js';
 import { initAnalytics, trackPage, trackEvent } from './analytics.js';
 import { initVoucher, refreshVoucher, registerHit } from './voucher.js';
 import { floatMessage } from './screen-splats.js';
@@ -21,6 +22,7 @@ const hint = $('#hint');
 const welcome = $('#welcome');
 const loader = $('#loader');
 let scene = null;
+let walkMode = null; // recorrido a pie: lo activa el juego del voucher
 let shots = 0, soldierHits = 0, reportedShots = 0, reportedHits = 0; // disparos de esta visita (Analytics)
 let navToken = 0; // invalida navegaciones anteriores si el usuario cambia de destino a mitad de viaje
 let shownKey = null; // sección cuya página está visible
@@ -174,6 +176,7 @@ function setupSound() {
   };
   b.addEventListener('click', () => { setMuted(!isMuted()); draw(); });
   draw();
+  startMusic(); // tema de Vikingo al abrir la página (si el navegador lo bloquea, suena con el primer toque)
 }
 
 /* ---------- Arranque ---------- */
@@ -272,6 +275,7 @@ async function start() {
       })
     );
     home.classList.add('has-scene');
+    walkMode = initWalk({ scene, home, button: $('#btn-walk'), onStart: dismissWelcome }); // recorrer el campo a pie (solo durante el voucher)
   } catch (e) {
     console.error('Escena 3D no disponible:', e);
     home.classList.add('no-webgl');
@@ -303,7 +307,9 @@ async function start() {
     onStart: () => {
       dismissWelcome();
       hint.classList.add('gone');
+      walkMode?.begin(); // al jugar por el voucher se puede caminar por el campo
     },
+    onEnd: () => walkMode?.end(),
   });
 
   // resumen de disparos de la visita: un solo evento al salir o cambiar de pestaña (no uno por disparo)

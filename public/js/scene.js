@@ -1537,6 +1537,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
 
   const solids = []; // objetos que reciben impactos
   const solid = (o) => (solids.push(o), o);
+  const colliders = []; // obstáculos redondos {x, z, r} que frenan al jugador al recorrer el campo
 
   /* ----- suelo ----- */
   const groundGeo = new THREE.PlaneGeometry(320, 320, 160, 160).rotateX(-Math.PI / 2);
@@ -1592,6 +1593,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     for (let i = 0; i < 4; i++) tryAdd(-6.5 + i * 0.95, -15, 3);
     for (let i = 0; i < 4; i++) tryAdd(4 + i * 0.95, -18, 4);
     for (let i = 0; i < 3; i++) tryAdd(-11 + i * 0.95, -7.5, 3);
+    for (const s of stacks) colliders.push({ x: s.x, z: s.z, r: 0.62 });
     const total = stacks.reduce((a, s) => a + s.h, 0);
     // neumático real: banda de rodadura con dibujo, flancos y caucho negro (ver props.js)
     const { geo: tireGeo, mat: tireMat } = tireAssets();
@@ -1634,6 +1636,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       if (rnd() < 0.3) { b.rotation.z = Math.PI / 2; b.position.y = 0.297; b.rotation.y = R(0, 3); } // tumbado
       scene.add(b);
       solid(drum.children[0]);
+      colliders.push({ x, z, r: 0.5 });
     }
   }
 
@@ -1659,6 +1662,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       m.makeTranslation(x, h + 0.22, z);
       tips.setMatrixAt(i, m);
     });
+    for (const [x, z] of pts) colliders.push({ x, z, r: 0.26 });
     logs.castShadow = tips.castShadow = true;
     logs.receiveShadow = true;
     scene.add(solid(logs), solid(tips));
@@ -1718,7 +1722,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       const gy = terrainHeight(x, z) - 0.3; // base del tronco algo enterrada (en ladera)
       const keep = QUALITY.keepTree(i); // en móvil se dibujan ~2 de cada 3 (se calculan todos: el resto del escenario no cambia)
       m.makeScale(radius, height, radius).setPosition(x, gy, z);
-      if (keep) trunks.setMatrixAt(drawn, m);
+      if (keep) { trunks.setMatrixAt(drawn, m); colliders.push({ x, z, r: radius * 1.25 + 0.1 }); }
       col.setScalar(R(0.75, 1.1));
       if (keep) trunks.setColorAt(drawn++, col);
 
@@ -1806,6 +1810,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     crate.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; solid(o); } });
     crate.position.set(-2.3, 0, -3.6);
     crate.rotation.y = 0.32;
+    for (const k of [-0.5, 0, 0.5]) colliders.push({ x: -2.3 + Math.cos(0.32) * k, z: -3.6 - Math.sin(0.32) * k, r: 0.62 });
     scene.add(crate);
     crateGroup = crate;
     crateFrontZ = D / 2 + 0.0175;
@@ -1826,6 +1831,11 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 1, 12), logMat);
   const postR = postL.clone();
   for (const o of [beam, postL, postR]) { o.castShadow = true; gate.add(solid(o)); }
+
+  const gatePosts = [{ x: 0, z: -DEPTH, r: 0.3 }, { x: 0, z: -DEPTH, r: 0.3 }];
+  colliders.push(...gatePosts);
+  colliders.push({ x: STATIONS.reservas.prop[0], z: STATIONS.reservas.prop[1], r: 4.8 }); // casa larga
+  colliders.push({ x: STATIONS.tienda.prop[0], z: STATIONS.tienda.prop[1], r: 2.8 }); // puesto de mercado
 
   const ropeMat = new THREE.MeshStandardMaterial({ color: 0xb59a6a, roughness: 1 });
   const ropeGeo = new THREE.CylinderGeometry(0.012, 0.012, 1, 6);
@@ -1901,13 +1911,19 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     for (const b of boards) b.mesh.material[4] = on ? b.frontBlank : b.front;
   }
   const lc = new THREE.Vector3(), lr = new THREE.Vector3(), lu = new THREE.Vector3();
+  const lf = new THREE.Vector3();
   function updateLabels() {
     const W = canvas.clientWidth, H = canvas.clientHeight;
+    camera.getWorldDirection(lf);
     const hN = 1 / BOARD_RATIO;
     for (const b of boards) {
       b.mesh.updateWorldMatrix(true, false);
       // centro, borde derecho y borde superior de la cara frontal, proyectados a la pantalla
-      lc.set(0, 0, 0.026).applyMatrix4(b.mesh.matrixWorld).project(camera);
+      lc.set(0, 0, 0.026).applyMatrix4(b.mesh.matrixWorld);
+      const inFront = tmpV.copy(lc).sub(camera.position).dot(lf) > 0.2; // al caminar, un cartel puede quedar a la espalda
+      b.labelEl.style.display = inFront ? '' : 'none';
+      if (!inFront) continue;
+      lc.project(camera);
       lr.set(0.5, 0, 0.026).applyMatrix4(b.mesh.matrixWorld).project(camera);
       lu.set(0, hN / 2, 0.026).applyMatrix4(b.mesh.matrixWorld).project(camera);
       const x = (lc.x + 1) * W / 2, y = (1 - lc.y) * H / 2;
@@ -1983,6 +1999,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     for (const [p, sx] of [[postL, -1], [postR, 1]]) {
       p.scale.set(1, postH, 1);
       p.position.set((sx * beamLen) / 2 - sx * 0.1, postH / 2, -DEPTH - 0.05);
+      Object.assign(gatePosts[sx < 0 ? 0 : 1], { x: p.position.x, z: p.position.z });
     }
 
     // escudo colgado bajo los carteles
@@ -2000,6 +2017,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     });
 
     positionGun();
+    if (WALK.active) centerCrosshair();
     links.layout(camera, HOME_POS.y);
     htmlLabels = QUALITY.mobile || camera.aspect < 1;
     // el encuadre de la estación depende del ancho de pantalla
@@ -2105,6 +2123,101 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   const UP = new THREE.Vector3(0, 1, 0);
   const homeQ = new THREE.Quaternion();
 
+  /* ----- recorrer el campo (modo caminar) -----
+     La cámara se mueve a pie por el campo (WASD / palanca izquierda) y se gira con el ratón o la palanca derecha;
+     la mira queda en el centro de la pantalla. Los obstáculos (árboles, neumáticos, empalizada…) frenan el paso. */
+  const WALK = { active: false, x: 0, z: 0, yaw: 0, pitch: 0, mx: 0, my: 0, vx: 0, vz: 0, bob: 0, aimT: 0 };
+  const WALK_SPEED = 3.4; // m/s a palanca completa
+  const WALK_LIMIT = 24.5; // el campo es una elipse (x/1.3, z+16): no se sale de ella
+  const PLAYER_R = 0.35;
+  const YAW_MAX = 1.5; // ±86° respecto al frente (detrás del jugador no hay escenario)
+  const PITCH_MIN = -0.6, PITCH_MAX = 0.5;
+  const walkEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+  const walkApi = { onChange: null }; // la interfaz (walk.js) se entera cuando el modo termina por su cuenta
+
+  function centerCrosshair() {
+    const r = canvas.getBoundingClientRect();
+    crosshair.style.transform = `translate(${r.left + r.width / 2}px, ${r.top + r.height / 2}px)`;
+    crosshair.classList.add('visible');
+  }
+  function endWalk() {
+    if (!WALK.active) return;
+    WALK.active = false;
+    WALK.mx = WALK.my = WALK.vx = WALK.vz = 0;
+    pointerActive = false;
+    walkApi.onChange?.(false);
+  }
+  /** Empuja la posición fuera de los obstáculos y dentro del campo (el jugador se desliza por los bordes) */
+  function resolveWalk(x, z) {
+    const d = Math.hypot(x / 1.3, z + 16);
+    if (d > WALK_LIMIT) { const k = WALK_LIMIT / d; x *= k; z = -16 + (z + 16) * k; }
+    for (let it = 0; it < 2; it++) {
+      for (const c of colliders) {
+        const dx = x - c.x, dz = z - c.z, rr = c.r + PLAYER_R;
+        const d2 = dx * dx + dz * dz;
+        if (d2 < rr * rr) {
+          const dd = Math.sqrt(d2) || 1e-4;
+          x = c.x + (dx / dd) * rr;
+          z = c.z + (dz / dd) * rr;
+        }
+      }
+    }
+    return [x, z];
+  }
+  function updateWalk(dt) {
+    const k = Math.min(1, dt * 9);
+    const sy = Math.sin(WALK.yaw), cy = Math.cos(WALK.yaw);
+    // adelante = (-sen, -cos); derecha = (cos, -sen)
+    WALK.vx += ((-sy * WALK.my + cy * WALK.mx) * WALK_SPEED - WALK.vx) * k;
+    WALK.vz += ((-cy * WALK.my - sy * WALK.mx) * WALK_SPEED - WALK.vz) * k;
+    const [x, z] = resolveWalk(WALK.x + WALK.vx * dt, WALK.z + WALK.vz * dt);
+    const speed = Math.hypot(x - WALK.x, z - WALK.z) / Math.max(dt, 1e-3);
+    WALK.x = x;
+    WALK.z = z;
+    WALK.bob += speed * dt * 2.3; // balanceo de pasos según lo recorrido
+    camera.position.set(x, HOME_POS.y + terrainHeight(x, z) + Math.sin(WALK.bob) * 0.028 * Math.min(1, speed / 2), z);
+    camera.quaternion.setFromEuler(walkEuler.set(WALK.pitch, WALK.yaw, 0, 'YXZ'));
+  }
+  function startWalk() {
+    if (WALK.active) return true;
+    if (mode !== 'home' || tween || navigating) return false;
+    WALK.active = true;
+    WALK.x = HOME_POS.x;
+    WALK.z = HOME_POS.z;
+    WALK.yaw = WALK.pitch = WALK.vx = WALK.vz = 0;
+    pointer.set(0, 0);
+    pointerActive = true;
+    pointerDirty = true;
+    centerCrosshair();
+    walkApi.onChange?.(true);
+    return true;
+  }
+  /** Termina el recorrido y vuelve suavemente al pórtico de carteles */
+  function stopWalk() {
+    if (!WALK.active) return Promise.resolve(true);
+    endWalk();
+    return travel({ pos: HOME_POS.clone(), q: homeQ }, 'home');
+  }
+  function walkFire() {
+    if (!WALK.active || navigating || mode !== 'home') return;
+    shoot();
+    crosshair.classList.add('fire');
+    setTimeout(() => crosshair.classList.remove('fire'), 70);
+  }
+  Object.defineProperty(walkApi, 'active', { get: () => WALK.active }); // (Object.assign copiaría el valor, no el getter)
+  Object.assign(walkApi, {
+    pose: () => ({ x: WALK.x, z: WALK.z, yaw: WALK.yaw, pitch: WALK.pitch }),
+    start: startWalk,
+    stop: stopWalk,
+    halt: endWalk, // termina sin viaje de vuelta (cuando se abre una página sin cartel)
+    fire: walkFire,
+    setMove(x, y) { WALK.mx = clamp(x, -1, 1); WALK.my = clamp(y, -1, 1); },
+    look(dYaw, dPitch) {
+      WALK.yaw = clamp(WALK.yaw + dYaw, -YAW_MAX, YAW_MAX);
+      WALK.pitch = clamp(WALK.pitch + dPitch, PITCH_MIN, PITCH_MAX);
+    },
+  });
+
   /** Posición y orientación de la cámara en una estación (con desplazamiento lateral en pantallas anchas) */
   function poseFor(key) {
     const st = STATIONS[key] || STATIONS.juegos;
@@ -2126,6 +2239,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   }
 
   function travel(pose, to, instant) {
+    endWalk();
     if (tween) tween.resolve(false);
     hovered = null;
     crosshair.classList.remove('target', 'visible');
@@ -2157,9 +2271,13 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     pointerActive = true;
     pointerDirty = true;
   }
-  const onMove = (e) => mode === 'home' && setPointer(e);
-  const onLeave = () => { crosshair.classList.remove('visible'); };
+  const onMove = (e) => mode === 'home' && !WALK.active && setPointer(e);
+  const onLeave = () => { if (!WALK.active) crosshair.classList.remove('visible'); };
   const onDown = (e) => {
+    if (WALK.active) { // recorriendo el campo: se dispara al centro (con el ratón; en el móvil, con la palanca derecha)
+      if (e.pointerType === 'mouse' && e.button === 0) walkFire();
+      return;
+    }
     if (e.button !== 0 || navigating || mode !== 'home') return;
     setPointer(e);
     updateAim();
@@ -2415,6 +2533,8 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
         if (mode === 'home') { parallax.x = parallax.y = 0; pointerDirty = true; }
         done.resolve(true);
       }
+    } else if (mode === 'home' && WALK.active) {
+      updateWalk(dt);
     } else if (mode === 'home') {
       // ligero balanceo de cámara según el puntero (paralaje)
       parallax.x += (-pointer.x * 0.035 - parallax.x) * 0.05;
@@ -2429,6 +2549,13 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     camera.updateMatrixWorld();
 
     if (mode === 'home' && !tween) {
+      if (WALK.active) {
+      // la mira va al centro; se recalcula a qué apunta unas 15 veces por segundo (basta para la marcadora y el resalte)
+      pointer.set(0, 0);
+      pointerActive = true;
+      pointerDirty = (WALK.aimT += dt) >= 0.066;
+      if (pointerDirty) WALK.aimT = 0;
+    }
       if (pointerDirty || !pointerActive) {
         if (!pointerActive) pointer.set(Math.sin(t * 0.5) * 0.12, 0.2 + Math.sin(t * 0.7) * 0.05);
         updateAim();
@@ -2603,6 +2730,8 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
       if (arrived) navigating = false;
       return arrived;
     },
+    /** Recorrer el campo a pie (ver «modo caminar» arriba) */
+    walk: walkApi,
     get mode() {
       return mode;
     },

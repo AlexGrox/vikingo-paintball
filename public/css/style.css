@@ -95,6 +95,72 @@ body.in-section #board-labels { display: none; }
 }
 .hud-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ---------- Recorrer el campo (caminar por el escenario) ---------- */
+#btn-walk[hidden] { display: none; }
+#btn-walk[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+body.walking .welcome, body.walking .hint, body.walking #legal-strip { display: none !important; }
+body.walking .hud-tools { bottom: auto; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); }
+body.walking #scene { touch-action: none; }
+/* el botón del voucher se hace chico para no tapar los carteles */
+body.walking #voucher-btn { top: calc(var(--admin-h) + max(6px, env(safe-area-inset-top))); padding: 5px 14px 5px 10px; font-size: 14px; animation: none; }
+body.walking #voucher-btn .vb-icon { font-size: 16px; }
+body.walking #voucher-hud { top: calc(var(--admin-h) + max(6px, env(safe-area-inset-top))); font-size: clamp(18px, 3vw, 24px); }
+body.walking #voucher-hud span { padding: 4px 12px; }
+.walk-ui {
+  --pad: clamp(104px, 36vh, 156px);
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
+}
+.walk-exit {
+  position: absolute; top: max(14px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); pointer-events: auto;
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px 8px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line-strong); background: rgba(21, 16, 11, .62); color: var(--text); backdrop-filter: blur(4px);
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 15px;
+}
+.walk-exit:hover { border-color: var(--accent); color: var(--accent); }
+.walk-hint {
+  position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); margin: 0;
+  padding: 8px 16px; border-radius: 999px; background: rgba(15, 10, 6, .7); border: 1px solid var(--line); color: #fff;
+  font-family: var(--font-ui); font-weight: 600; letter-spacing: .06em; font-size: 15px; text-align: center;
+  max-width: calc(100% - 40px); transition: opacity .8s;
+}
+.walk-ui.touch .walk-hint { max-width: calc(100% - 2 * (var(--pad) + 56px)); font-size: 14px; padding: 6px 12px; border-radius: 14px; }
+.walk-hint.gone { opacity: 0; }
+.walk-pad {
+  position: absolute; bottom: max(22px, env(safe-area-inset-bottom)); width: var(--pad); height: var(--pad); border-radius: 50%;
+  pointer-events: auto; touch-action: none; display: grid; place-items: center;
+  background: radial-gradient(circle, rgba(21, 16, 11, .3), rgba(21, 16, 11, .58));
+  border: 2px solid rgba(232, 177, 58, .55); box-shadow: 0 6px 24px rgba(0, 0, 0, .4), inset 0 0 22px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(3px); transition: border-color .15s, background .15s;
+}
+.walk-move { left: max(26px, calc(env(safe-area-inset-left) + 16px)); }
+.walk-aim { right: max(26px, calc(env(safe-area-inset-right) + 16px)); }
+.walk-pad.on { border-color: var(--accent); background: radial-gradient(circle, rgba(232, 177, 58, .12), rgba(21, 16, 11, .6)); }
+.walk-aim.firing { border-color: #fff; box-shadow: 0 0 0 6px rgba(255, 255, 255, .22), 0 6px 24px rgba(0, 0, 0, .4); }
+.walk-knob {
+  position: absolute; width: 42%; height: 42%; border-radius: 50%; pointer-events: none; transition: transform .12s ease-out;
+  background: radial-gradient(circle at 35% 30%, #ffe08a, #e8a72a 70%); border: 2px solid #5a3a08; box-shadow: 0 3px 10px rgba(0, 0, 0, .5);
+}
+.walk-pad.on .walk-knob { transition: none; }
+.walk-aim .walk-knob { width: 30%; height: 30%; opacity: .9; }
+.walk-reticle { position: absolute; inset: 16%; color: rgba(255, 255, 255, .5); pointer-events: none; }
+.walk-reticle svg { width: 100%; height: 100%; display: block; }
+.walk-arrow { position: absolute; width: 0; height: 0; border: 7px solid transparent; opacity: .55; pointer-events: none; }
+.walk-arrow.up { top: 6px; left: calc(50% - 7px); border-bottom: 10px solid #fff; border-top: 0; }
+.walk-arrow.down { bottom: 6px; left: calc(50% - 7px); border-top: 10px solid #fff; border-bottom: 0; }
+.walk-arrow.left { left: 6px; top: calc(50% - 7px); border-right: 10px solid #fff; border-left: 0; }
+.walk-arrow.right { right: 6px; top: calc(50% - 7px); border-left: 10px solid #fff; border-right: 0; }
+.walk-rotate {
+  position: absolute; inset: 0; display: none; place-content: center; justify-items: center; gap: 16px; padding: 24px; text-align: center;
+  background: rgba(10, 7, 4, .86); pointer-events: auto; color: #fff6df;
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: .06em; font-size: 22px; text-transform: uppercase;
+}
+.walk-rotate p { margin: 0; }
+.walk-phone { display: block; width: 44px; height: 76px; border: 4px solid var(--accent); border-radius: 10px; animation: walk-turn 2.2s ease-in-out infinite; }
+@keyframes walk-turn { 0%, 25% { transform: rotate(0); } 65%, 100% { transform: rotate(-90deg); } }
+.walk-ui.portrait .walk-rotate { display: grid; }
+.walk-ui.portrait .walk-pad, .walk-ui.portrait .walk-hint { display: none; }
+
 /* ---------- Información legal: franja de la portada y Data Fiscal ---------- */
 #legal-strip {
   position: fixed; z-index: 5; left: 54px; right: 66px; bottom: max(4px, calc(env(safe-area-inset-bottom) - 12px));
@@ -237,6 +303,15 @@ body.in-section .welcome, #home.no-webgl .welcome { display: none; }
   100% { opacity: 0; transform: translate(-50%, -330%) scale(1); }
 }
 body.in-section .float-msg { display: none; }
+/* Con «reducir movimiento» (Windows sin efectos de animación) la regla general acorta toda animación a 0,01 ms y el
+   mensaje se quedaba directamente invisible: sin desplazamiento, pero se ve ~1,6 s y se desvanece */
+@keyframes float-still {
+  0%, 80% { opacity: 1; transform: translate(-50%, -110%); }
+  100% { opacity: 0; transform: translate(-50%, -110%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .float-msg { animation-name: float-still; animation-duration: 1.9s !important; animation-timing-function: linear; }
+}
 
 /* ---------------- Juego «Jugar por un Voucher» ---------------- */
 #voucher-btn {

@@ -149,15 +149,17 @@ async function api(action, data = {}) {
 /* ---------- estado de la partida ---------- */
 let scene = null;
 let onStartCb = null;
+let onEndCb = null;
 let goTo = () => {};
 let btn = null;
 let hud = null;
 let claimOpen = false; // el cartel del premio está abierto
 let game = null; // { token, hits, endAt, startedAt, timer }
 
-export function initVoucher({ getScene, onStart, navigate }) {
+export function initVoucher({ getScene, onStart, onEnd, navigate }) {
   scene = getScene;
   onStartCb = onStart;
+  onEndCb = onEnd;
   goTo = navigate;
   btn = el('button#voucher-btn', { type: 'button', onclick: onButton });
   hud = el('div#voucher-hud', { hidden: true, 'aria-live': 'polite' });
@@ -362,6 +364,7 @@ function endGame(won) {
   game = null;
   hud.hidden = true;
   scene()?.setNavLocked(false);
+  onEndCb && onEndCb(); // se termina el recorrido a pie
   const seconds = Math.round((performance.now() - g.startedAt) / 1000);
   if (won) {
     const v = getSaved();
