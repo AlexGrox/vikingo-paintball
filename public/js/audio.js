@@ -131,8 +131,8 @@ export function playWhoosh(pan = 0, volume = 1) {
 }
 
 /* ---------- Música de fondo (tema de Vikingo) ----------
-   Los navegadores no dejan sonar nada con volumen hasta que la persona toca la página: se
-   intenta al abrir y, si lo bloquean, arranca sola con el primer toque, clic o tecla. */
+   Empieza cuando comienza la partida del voucher (main.js llama a startMusic). Si el navegador
+   la bloquea, arranca con el primer toque, clic o tecla. */
 const MUSIC_URL = 'audio/Musica_Vikingo.mp3';
 const MUSIC_VOL = 0.5;
 let music = null;
@@ -175,9 +175,11 @@ function playMusic() {
   );
 }
 
+let musicStarted = false; // la partida del voucher ya la pidió (antes de eso no suena aunque se active el sonido)
 /** Empieza (o retoma) la música, salvo que el sonido esté silenciado */
 export function startMusic() {
-  if (muted) return;
+  musicStarted = true;
+  if (muted) return; // si después se activa el sonido, arranca en ese momento
   musicWanted = true;
   playMusic();
 }
@@ -196,5 +198,5 @@ export function isMuted() { return muted; }
 export function setMuted(v) {
   muted = v;
   try { localStorage.setItem('vp_muted', v ? '1' : '0'); } catch { /* */ }
-  if (v) stopMusic(); else startMusic();
+  if (v) stopMusic(); else if (musicStarted) startMusic();
 }

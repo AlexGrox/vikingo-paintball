@@ -176,7 +176,6 @@ function setupSound() {
   };
   b.addEventListener('click', () => { setMuted(!isMuted()); draw(); });
   draw();
-  startMusic(); // tema de Vikingo al abrir la página (si el navegador lo bloquea, suena con el primer toque)
 }
 
 /* ---------- Arranque ---------- */
@@ -308,6 +307,7 @@ async function start() {
       dismissWelcome();
       hint.classList.add('gone');
       walkMode?.begin(); // al jugar por el voucher se puede caminar por el campo
+      startMusic(); // y suena el tema de Vikingo (no antes: la página abre en silencio)
     },
     onEnd: () => walkMode?.end(),
   });
