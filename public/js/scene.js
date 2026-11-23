@@ -33,7 +33,7 @@ const HOME_POS = new THREE.Vector3(0, 1.6, 0); // posición de la cámara en la 
 const IS_MOBILE = (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)
   || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 export const QUALITY = IS_MOBILE
-  ? { mobile: true, pixelRatio: 1.75, minPixelRatio: 1, antialias: true, shadowSize: 1024, softShadows: false,
+  ? { mobile: true, pixelRatio: 1.5, minPixelRatio: 1, antialias: true, shadowSize: 1024, softShadows: false,
       shadowEvery: 3, keepTree: (i) => i % 3 !== 2, keepTwig: (k) => k % 2 === 0, twigShadows: false,
       mist: 26, rays: 20, mistDetail: false, pointLights: false, aniso: 4, stationHalfRate: true, spawnTries: 4 }
   : { mobile: false, pixelRatio: 2, minPixelRatio: 1, antialias: true, shadowSize: 2048, softShadows: true,
@@ -1561,11 +1561,34 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     groundGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     groundGeo.computeVertexNormals();
   }
-  const ground = solid(
-    new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ ...dirtTexture(maxAniso), vertexColors: true, roughness: 1 }))
-  );
+  const groundMat = new THREE.MeshStandardMaterial({ ...dirtTexture(maxAniso), vertexColors: true, roughness: 1 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.receiveShadow = true;
   scene.add(ground);
+  {
+    // Para los rayos (puntería, impactos) el suelo se parte en bloques de 20 × 20 m: cada rayo solo revisa los
+    // triángulos de los bloques que cruza (unos cientos) y no los 51.200 del suelo entero, que costaba más que
+    // todo el resto del escenario junto (en un celular, más de un fotograma por rayo). No se dibujan: el suelo
+    // que se ve sigue siendo el mismo.
+    const SEG = 160, BLOCK = 10, NB = SEG / BLOCK;
+    const index = groundGeo.index.array, pos = groundGeo.attributes.position;
+    const lists = Array.from({ length: NB * NB }, () => []);
+    for (let tri = 0; tri < SEG * SEG * 2; tri++) {
+      const cell = tri >> 1;
+      lists[Math.floor(cell / SEG / BLOCK) * NB + Math.floor((cell % SEG) / BLOCK)].push(index[tri * 3], index[tri * 3 + 1], index[tri * 3 + 2]);
+    }
+    const p = new THREE.Vector3();
+    for (const list of lists) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', pos); // comparte los vértices
+      g.setIndex(list);
+      const box = new THREE.Box3();
+      for (const v of list) box.expandByPoint(p.fromBufferAttribute(pos, v));
+      g.boundingBox = box; // a mano: calcularlo miraría todos los vértices del suelo
+      g.boundingSphere = box.getBoundingSphere(new THREE.Sphere());
+      solid(new THREE.Mesh(g, groundMat));
+    }
+  }
 
   /* ----- materiales de madera ----- */
   const woodTex = new THREE.CanvasTexture(woodCanvas(512, 512, { planks: 4, hue: 28, light: 36 }));
@@ -1596,7 +1619,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
     for (const s of stacks) colliders.push({ x: s.x, z: s.z, r: 0.62 });
     const total = stacks.reduce((a, s) => a + s.h, 0);
     // neumático real: banda de rodadura con dibujo, flancos y caucho negro (ver props.js)
-    const { geo: tireGeo, mat: tireMat } = tireAssets();
+    const { geo: tireGeo, mat: tireMat } = tireAssets(QUALITY.mobile ? 32 : 64);
     const tire = new THREE.InstancedMesh(tireGeo, tireMat, total);
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color();
     let k = 0;
@@ -2488,6 +2511,7 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
   const clock = new THREE.Clock();
   let t = 0;
   let frameNo = 0;
+  let idleAimT = 0; // segundos desde la última puntería automática (mira sin puntero)
   const perf = { time: 0, frames: 0, good: 0 };
   /** Resolución dinámica: baja si los FPS caen y sube despacio cuando sobra margen */
   function adaptResolution(dt) {
@@ -2550,14 +2574,17 @@ export async function createScene({ canvas, crosshair, content, onSectionHit, on
 
     if (mode === 'home' && !tween) {
       if (WALK.active) {
-      // la mira va al centro; se recalcula a qué apunta unas 15 veces por segundo (basta para la marcadora y el resalte)
-      pointer.set(0, 0);
-      pointerActive = true;
-      pointerDirty = (WALK.aimT += dt) >= 0.066;
-      if (pointerDirty) WALK.aimT = 0;
-    }
-      if (pointerDirty || !pointerActive) {
-        if (!pointerActive) pointer.set(Math.sin(t * 0.5) * 0.12, 0.2 + Math.sin(t * 0.7) * 0.05);
+        // la mira va al centro; se recalcula a qué apunta unas 15 veces por segundo (basta para la marcadora y el resalte)
+        pointer.set(0, 0);
+        pointerActive = true;
+        pointerDirty = (WALK.aimT += dt) >= 0.066;
+        if (pointerDirty) WALK.aimT = 0;
+      }
+      if (!pointerActive) {
+        // sin puntero (celular sin tocar): la mira se mece sola; a qué apunta se recalcula ~30 veces por segundo, no en cada fotograma
+        pointer.set(Math.sin(t * 0.5) * 0.12, 0.2 + Math.sin(t * 0.7) * 0.05);
+        if ((idleAimT += dt) >= 0.033) { idleAimT = 0; updateAim(); }
+      } else if (pointerDirty) {
         updateAim();
       }
       gunAway += (0 - gunAway) * Math.min(1, dt * 6);

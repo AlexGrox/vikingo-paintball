@@ -86,9 +86,10 @@ const TIRE_PROFILE = [
 export const TIRE_HEIGHT = 0.3;
 
 let tireCache = null;
-export function tireAssets() {
+/** @param {number} segments vueltas del torno: 64 en PC; en celular 32 (el dibujo de la banda es textura: no se pierde detalle y hay la mitad de triángulos en los 135 neumáticos) */
+export function tireAssets(segments = 64) {
   if (tireCache) return tireCache;
-  const { geo, arc } = lathe(TIRE_PROFILE, 64, 30);
+  const { geo, arc } = lathe(TIRE_PROFILE, segments, 30);
   const vTread0 = arc[8], vTread1 = arc[12], vShoulder0 = arc[6], vShoulder1 = arc[14];
   const W = 1024, Hh = 512;
   const [hc, hg] = canvas(W, Hh); // alturas

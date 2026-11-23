@@ -30,6 +30,7 @@ export function initWalk({ scene, home, button, onStart }) {
   let raf = 0;
   let last = 0;
   let hadLock = false;
+  let beginToken = 0; // invalida los reintentos de begin() si la partida ya terminó
   const keys = new Set();
   const state = { move: null, aim: null, lastFire: 0 };
   const vibrate = (ms) => { try { navigator.vibrate?.(ms); } catch { /* sin vibración */ } };
@@ -262,10 +263,18 @@ export function initWalk({ scene, home, button, onStart }) {
     /** Empieza la partida: aparece el botón para volver a caminar y el jugador ya sale caminando */
     begin() {
       button.hidden = false;
-      walk.start();
+      const mine = ++beginToken;
+      let tries = 0;
+      // si la cámara todavía está en un viaje (celular lento) el recorrido se rechaza: se reintenta unos segundos
+      const go = () => {
+        if (mine !== beginToken || walk.active) return;
+        if (!walk.start() && ++tries < 12) setTimeout(go, 300);
+      };
+      go();
     },
     /** Termina la partida: se sale del recorrido y el botón desaparece */
     end() {
+      beginToken++;
       button.hidden = true;
       if (walk.active) walk.stop();
     },
